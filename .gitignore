@@ -1,0 +1,41 @@
+## Node / React
+frontend/node_modules/
+frontend/build/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+## Python / Django
+backend/venv/
+backend/.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+## Django secrets & runtime
+.env
+.env.*
+backend/.env
+backend/.env.*
+backend/db.sqlite3
+backend/media/
+backend/staticfiles/
+
+## OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+## Remove any legacy PHP leftovers (do not commit)
+vendor/
+composer.json
+composer.lock
+composer.phar
+composer.bat
+php.exe
+_removed_php_*/

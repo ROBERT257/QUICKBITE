@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBite Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 50px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        .status {
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+        .success {
+            color: #4ade80;
+        }
+        .error {
+            color: #f87171;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍔 QuickBite</h1>
+        <div class="status">
+            <h2>System Status</h2>
+            <div id="backend-status">Testing Backend...</div>
+            <div id="frontend-status">Frontend: Static HTML Working ✅</div>
+        </div>
+        <div class="links">
+            <h3>Access Points:</h3>
+            <p><a href="http://localhost:8000" style="color: white;">Backend API</a></p>
+            <p><a href="http://localhost:8000/admin" style="color: white;">Admin Panel</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Test backend connection
+        fetch('http://localhost:8000/')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('backend-status').innerHTML = 
+                    '<span class="success">Backend: Connected ✅</span><br>' + 
+                    JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                document.getElementById('backend-status').innerHTML = 
+                    '<span class="error">Backend: Connection Failed ❌</span><br>' + error.message;
+            });
+    </script>
+</body>
+</html>
