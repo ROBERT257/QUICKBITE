@@ -1,0 +1,242 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+    :root {
+        --primary-color: #4facfe;
+        --secondary-color: #764ba2;
+        --accent-color: #f093fb;
+        --dark-bg: #0f0f23;
+        --card-bg: rgba(255, 255, 255, 0.08);
+        --text-light: #ffffff;
+        --text-muted: rgba(255, 255, 255, 0.7);
+    }
+
+    body {
+        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #1e3a8a 100%);
+        background-size: 400% 400%;
+        animation: gradientShift 20s ease infinite;
+        color: var(--text-light);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    #header {
+        background: rgba(255, 255, 255, 0.1) !important;
+        backdrop-filter: blur(20px) saturate(180%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    }
+
+    #branding h1 {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+        font-size: 1.8rem;
+    }
+
+    #branding h1 a {
+        color: inherit !important;
+        text-decoration: none;
+    }
+
+    .module h2, .module caption, .inline-group h2 {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-weight: 600;
+    }
+
+    .module {
+        background: var(--card-bg);
+        backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        transition: all 0.3s ease;
+    }
+
+    .module:hover {
+        transform: translateY(-2px);
+        border-color: rgba(79, 172, 254, 0.3);
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.45);
+    }
+
+    .module th, .module td {
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-light);
+    }
+
+    .module a {
+        color: var(--primary-color) !important;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+    .module a:hover {
+        color: var(--accent-color) !important;
+    }
+
+    .addlink, .changelink {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: white !important;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        display: inline-block;
+        margin: 4px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(79, 172, 254, 0.4);
+    }
+
+    .addlink:hover, .changelink:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(79, 172, 254, 0.6);
+        color: white !important;
+    }
+
+    .object-tools a {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: white !important;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(79, 172, 254, 0.4);
+    }
+
+    .object-tools a:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(79, 172, 254, 0.6);
+        color: white !important;
+    }
+
+    .button, input[type=submit], input[type=button], .submit-row input {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: white !important;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(79, 172, 254, 0.4);
+    }
+
+    .button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(79, 172, 254, 0.6);
+        color: white !important;
+    }
+
+    .form-row {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        margin-bottom: 16px;
+        padding: 16px;
+    }
+
+    .form-row label {
+        color: var(--text-light);
+        font-weight: 600;
+    }
+
+    .form-row input, .form-row select, .form-row textarea {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        color: var(--text-light);
+        padding: 8px 12px;
+        transition: all 0.3s ease;
+    }
+
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    #content {
+        background: transparent;
+        padding: 20px;
+    }
+
+    .dashboard .module table th {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+    }
+
+    .dashboard .module table tr:hover {
+        background: rgba(79, 172, 254, 0.1);
+    }
+
+    .messagelist .success {
+        background: linear-gradient(45deg, #52c41a, #73d13d);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 16px;
+        box-shadow: 0 4px 16px rgba(82, 196, 26, 0.4);
+    }
+
+    .messagelist .error {
+        background: linear-gradient(45deg, #ff4d4f, #ff7875);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 16px;
+        box-shadow: 0 4px 16px rgba(255, 77, 79, 0.4);
+    }
+
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .dashboard #content-main {
+        width: 100%;
+    }
+
+    .dashboard .module {
+        margin-bottom: 30px;
+    }
+
+    .dashboard .module h2 {
+        font-size: 1.2rem;
+        margin-bottom: 16px;
+    }
+
+    .dashboard .module table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .dashboard .module table td, .dashboard .module table th {
+        padding: 12px;
+        text-align: left;
+    }
+
+    .dashboard .module .addlink {
+        margin-top: 16px;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">🍔 QuickBite Admin</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

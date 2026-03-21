@@ -5,19 +5,63 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import Category, MenuItem, Review
 from .serializers import CategorySerializer, MenuItemSerializer, MenuItemListSerializer, ReviewSerializer
 
-class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
+class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAdminUser()]
+        return [permissions.AllowAny()]
 
-class MenuItemViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = MenuItem.objects.filter(is_available=True)
-    permission_classes = [permissions.AllowAny]
+class MenuItemViewSet(viewsets.ModelViewSet):
+    queryset = MenuItem.objects.all()
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['category', 'is_featured', 'spice_level']
+    filterset_fields = ['category', 'is_featured', 'spice_level', 'is_available']
     search_fields = ['name', 'description']
     ordering_fields = ['price', 'created_at', 'name']
     ordering = ['name']
+    
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return MenuItemListSerializer
+        return MenuItemSerializer
+    
+    def get_queryset(self):
+        if self.request.user and self.request.user.is_staff:
+            return MenuItem.objects.all()
+        return MenuItem.objects.filter(is_available=True)
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAdminUser()]
+        return [permissions.AllowAny()]
+    
+    @action(detail=False, methods=['post'])
+    def bulk_update_availability(self, request):
+        """Bulk update availability status"""
+        item_ids = request.data.get('item_ids', [])
+        is_available = request.data.get('is_available', True)
+        
+        updated = MenuItem.objects.filter(id__in=item_ids).update(is_available=is_available)
+        return Response({
+            'message': f'Updated {updated} items',
+            'updated_count': updated
+        })
+    
+    @action(detail=False, methods=['post'])
+    def bulk_update_featured(self, request):
+        """Bulk update featured status"""
+        item_ids = request.data.get('item_ids', [])
+        is_featured = request.data.get('is_featured', True)
+        
+        updated = MenuItem.objects.filter(id__in=item_ids).update(is_featured=is_featured)
+        return Response({
+            'message': f'Updated {updated} items',
+            'updated_count': updated
+        })
     
     def get_serializer_class(self):
         if self.action == 'retrieve':

@@ -1,0 +1,136 @@
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Dark Mode Gradient -->
+    <linearGradient id="darkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Light Mode Gradient -->
+    <linearGradient id="lightGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D97706;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Text Gradient -->
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E5E5E5;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Dark Text Gradient -->
+    <linearGradient id="darkTextGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1F2937;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#475569;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Soft Glow -->
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Shadow -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#10B981" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  
+  <!-- Burger Icon -->
+  <g transform="translate(10, 15)">
+    <!-- Top Bun -->
+    <ellipse cx="12" cy="8" rx="10" ry="6" 
+             fill="url(#darkGradient)" 
+             filter="url(#softGlow)"
+             opacity="0.9"/>
+    
+    <!-- Patty -->
+    <rect x="4" y="12" width="16" height="8" 
+             fill="url(#darkGradient)" 
+             rx="2"/>
+    
+    <!-- Cheese -->
+    <rect x="3" y="10" width="18" height="3" 
+             fill="url(#lightGradient)" 
+             rx="1"/>
+    
+    <!-- Lettuce -->
+    <rect x="2" y="20" width="20" height="2" 
+             fill="#10B981" 
+             rx="1"/>
+    
+    <!-- Bottom Bun -->
+    <path d="M2 22 Q2 26 6 26 L18 26 Q22 26 22 22 Z" 
+          fill="url(#darkGradient)" 
+          opacity="0.8"/>
+    
+    <!-- Sesame Seeds -->
+    <circle cx="6" cy="6" r="1" fill="#F59E0B" opacity="0.7"/>
+    <circle cx="12" cy="5" r="1" fill="#F59E0B" opacity="0.7"/>
+    <circle cx="18" cy="6" r="1" fill="#F59E0B" opacity="0.7"/>
+  </g>
+  
+  <!-- QuickBite Text -->
+  <g transform="translate(45, 20)">
+    <!-- Quick -->
+    <text x="0" y="8" 
+             font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+             font-size="20" 
+             font-weight="700" 
+             fill="url(#textGradient)"
+             filter="url(#shadow)">
+      Quick
+    </text>
+    
+    <!-- Bite -->
+    <text x="46" y="8" 
+             font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+             font-size="20" 
+             font-weight="300" 
+             fill="url(#textGradient)"
+             filter="url(#shadow)">
+      Bite
+    </text>
+    
+    <!-- Speed Line -->
+    <rect x="0" y="14" width="80" height="2" 
+             fill="url(#darkGradient)" 
+             rx="1" 
+             opacity="0.8"/>
+    
+    <!-- Pulse Dot -->
+    <circle cx="85" cy="15" r="2" fill="url(#darkGradient)">
+      <animate attributeName="opacity" 
+               values="1;0.3;1" 
+               dur="2s" 
+               repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Floating Elements -->
+  <g opacity="0.4">
+    <rect x="145" y="15" width="3" height="3" fill="#10B981" rx="1">
+      <animate attributeName="y" 
+               values="15;10;15" 
+               dur="4s" 
+               repeatCount="indefinite"/>
+    </rect>
+    <circle cx="160" cy="25" r="1.5" fill="#F59E0B">
+      <animate attributeName="opacity" 
+               values="0;1;0" 
+               dur="3s" 
+               begin="1s"
+               repeatCount="indefinite"/>
+    </circle>
+    <rect x="175" y="30" width="4" height="4" fill="#10B981" rx="1">
+      <animate attributeName="opacity" 
+               values="0.4;1;0.4" 
+               dur="3.5s" 
+               begin="2s"
+               repeatCount="indefinite"/>
+    </rect>
+  </g>
+</svg>

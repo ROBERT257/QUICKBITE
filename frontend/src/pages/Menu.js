@@ -1,46 +1,107 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
-  StarIcon, 
-  ClockIcon, 
-  FireIcon,
-  FilterIcon,
-  SearchIcon
-} from '@heroicons/react/outline';
+  FiStar, 
+  FiClock, 
+  FiFilter,
+  FiSearch,
+  FiShoppingCart,
+  FiPlus,
+  FiMinus,
+  FiTrash2,
+  FiArrowRight
+} from 'react-icons/fi';
 import { menuAPI } from '../services/api';
 import { useQuery } from 'react-query';
+import toast from 'react-hot-toast';
+import { useAuth } from '../hooks/useAuth';
 
 const Menu = () => {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
+  const [cart, setCart] = useState({});
+  const [showCartSummary, setShowCartSummary] = useState(false);
 
-  const { data: categories } = useQuery('categories', menuAPI.getCategories);
+  // Fetch categories
+  const { data: categories, isLoading: categoriesLoading } = useQuery(
+    'categories', 
+    () => menuAPI.getCategories().then(res => res.data)
+  );
   
-  const { data: menuItems, isLoading } = useQuery(
+  // Fetch menu items
+  const { data: menuItems, isLoading: menuLoading } = useQuery(
     ['menuItems', { category: selectedCategory !== 'all' ? selectedCategory : '', search: searchTerm, ordering: sortBy }],
-    menuAPI.getMenuItems
+    () => menuAPI.getMenuItems({
+      category: selectedCategory !== 'all' ? selectedCategory : '', 
+      search: searchTerm, 
+      ordering: sortBy
+    }).then(res => res.data)
   );
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
+  const addToCart = (item) => {
+    setCart(prev => ({
+      ...prev,
+      [item.id]: (prev[item.id] || 0) + 1
+    }));
+    toast.success(`${item.name} added to cart!`);
   };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5
+  const removeFromCart = (item) => {
+    setCart(prev => {
+      const newCart = { ...prev };
+      if (newCart[item.id] > 1) {
+        newCart[item.id]--;
+      } else {
+        delete newCart[item.id];
       }
+      return newCart;
+    });
+  };
+
+  const getCartCount = () => {
+    return Object.values(cart).reduce((sum, count) => sum + count, 0);
+  };
+
+  const getCartTotal = () => {
+    if (!menuItems) return 0;
+    return Object.entries(cart).reduce((total, [itemId, count]) => {
+      const item = menuItems.find(item => item.id === parseInt(itemId));
+      return total + (item ? parseFloat(item.price) * count : 0);
+    }, 0);
+  };
+
+  const clearCart = () => {
+    setCart({});
+    toast.success('Cart cleared');
+  };
+
+  const proceedToCheckout = () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to proceed');
+      navigate('/login');
+      return;
     }
+    
+    if (getCartCount() === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    // Store cart in localStorage for checkout page
+    const cartData = Object.entries(cart).map(([itemId, quantity]) => {
+      const item = menuItems.find(item => item.id === parseInt(itemId));
+      return {
+        ...item,
+        quantity
+      };
+    });
+    
+    localStorage.setItem('checkout_cart', JSON.stringify(cartData));
+    navigate('/order');
   };
 
   const getSpiceLevelColor = (level) => {
@@ -63,20 +124,41 @@ const Menu = () => {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.5
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-5xl font-bold mb-4 text-gradient">Our Menu</h1>
-          <p className="text-xl text-white/80">Discover our delicious selection of meals</p>
+          <h1 className="text-5xl font-bold text-gradient mb-4">Our Menu</h1>
+          <p className="text-white/70 text-lg">Discover delicious food made with fresh ingredients</p>
         </motion.div>
 
-        {/* Filters and Search */}
+        {/* Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -87,7 +169,7 @@ const Menu = () => {
             {/* Search */}
             <div className="md:col-span-2">
               <div className="relative">
-                <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/60" />
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/60" />
                 <input
                   type="text"
                   placeholder="Search for food..."
@@ -106,10 +188,8 @@ const Menu = () => {
                 className="glass-input w-full"
               >
                 <option value="all">All Categories</option>
-                {categories?.data?.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
+                {categories?.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
             </div>
@@ -130,8 +210,8 @@ const Menu = () => {
           </div>
         </motion.div>
 
-        {/* Menu Items Grid */}
-        {isLoading ? (
+        {/* Loading State */}
+        {(menuLoading || categoriesLoading) && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="glass-card p-6">
@@ -144,37 +224,39 @@ const Menu = () => {
               </div>
             ))}
           </div>
-        ) : (
+        )}
+
+        {/* Menu Items Grid */}
+        {!menuLoading && !categoriesLoading && (
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
-            {menuItems?.data?.map((item, index) => (
+            {menuItems?.map((item, index) => (
               <motion.div
                 key={item.id}
                 variants={itemVariants}
                 whileHover={{ scale: 1.02 }}
-                className="glass-card p-6 hover:shadow-glow transition-all duration-300 group cursor-pointer"
-                onClick={() => {
-                  // Add to cart logic here
-                  console.log('Add to cart:', item);
-                }}
+                className="glass-card overflow-hidden hover:shadow-xl transition-all duration-300 group"
               >
                 {/* Item Image */}
-                <div className="relative overflow-hidden rounded-lg mb-4">
+                <div className="relative overflow-hidden">
                   <img 
-                    src={item.image || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'} 
+                    src={item.image && (item.image.startsWith('http') ? item.image : `http://localhost:8000/media/${item.image}`) || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'} 
                     alt={item.name}
-                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
+                    className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-300"
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+                    }}
                   />
                   
                   {/* Badges */}
                   <div className="absolute top-2 left-2 flex flex-col gap-2">
                     {item.is_featured && (
                       <div className="bg-neon-yellow text-black px-2 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
-                        <StarIcon className="w-3 h-3" />
+                        <FiStar className="w-3 h-3" />
                         <span>Featured</span>
                       </div>
                     )}
@@ -190,7 +272,7 @@ const Menu = () => {
                 </div>
 
                 {/* Item Details */}
-                <div className="space-y-3">
+                <div className="p-6 space-y-4">
                   <div>
                     <h3 className="text-xl font-semibold text-white group-hover:text-neon-blue transition-colors">
                       {item.name}
@@ -198,34 +280,61 @@ const Menu = () => {
                     <p className="text-sm text-white/60">{item.category_name}</p>
                   </div>
                   
-                  <p className="text-white/70 text-sm line-clamp-2">
+                  <p className="text-white/70 text-sm truncate">
                     {item.description}
                   </p>
 
-                  {/* Item Stats */}
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-1">
-                        <StarIcon className="w-4 h-4 text-yellow-400 fill-current" />
-                        <span className="text-white/80">{item.average_rating || 4.5}</span>
-                      </div>
-                      <div className="flex items-center space-x-1 text-white/60">
-                        <ClockIcon className="w-4 h-4" />
-                        <span>{item.preparation_time}min</span>
-                      </div>
+                  {/* Additional Info */}
+                  <div className="flex items-center justify-between text-sm text-white/60">
+                    <div className="flex items-center space-x-1">
+                      <FiClock className="w-4 h-4" />
+                      <span>{item.preparation_time} min</span>
                     </div>
-                    {item.calories && (
-                      <div className="flex items-center space-x-1 text-white/60">
-                        <FireIcon className="w-4 h-4" />
-                        <span>{item.calories} cal</span>
-                      </div>
-                    )}
+                    <div className="flex items-center space-x-1">
+                      <FiStar className="w-4 h-4 text-neon-yellow" />
+                      <span>{item.average_rating || '4.5'}</span>
+                    </div>
                   </div>
 
-                  {/* Add to Cart Button */}
-                  <button className="w-full btn-glow py-3 flex items-center justify-center space-x-2 group-hover:scale-105 transition-transform">
-                    <span>Add to Cart</span>
-                  </button>
+                  {/* Cart Controls */}
+                  <div className="flex items-center justify-between">
+                    {cart[item.id] ? (
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFromCart(item);
+                          }}
+                          className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
+                        >
+                          <FiMinus className="w-4 h-4" />
+                        </button>
+                        <span className="text-white font-semibold w-8 text-center">
+                          {cart[item.id]}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(item);
+                          }}
+                          className="w-8 h-8 rounded-full bg-neon-green text-black flex items-center justify-center hover:bg-green-500 transition-colors"
+                        >
+                          <FiPlus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(item);
+                        }}
+                        className="flex-1 bg-neon-blue text-black px-4 py-2 rounded-full font-semibold hover:bg-blue-500 transition-colors flex items-center justify-center space-x-2"
+                      >
+                        <FiShoppingCart className="w-4 h-4" />
+                        <span>Add to Cart</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -233,7 +342,7 @@ const Menu = () => {
         )}
 
         {/* No Results */}
-        {!isLoading && menuItems?.data?.length === 0 && (
+        {!menuLoading && !categoriesLoading && (!menuItems || menuItems.length === 0) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -254,6 +363,78 @@ const Menu = () => {
               >
                 Clear Filters
               </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Cart Summary */}
+        {getCartCount() > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-8 right-8 glass-card p-6 max-w-sm z-40"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-semibold flex items-center">
+                <FiShoppingCart className="w-5 h-5 mr-2" />
+                Cart Summary
+              </h3>
+              <button
+                onClick={() => setShowCartSummary(!showCartSummary)}
+                className="text-white/60 hover:text-white"
+              >
+                {showCartSummary ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between text-white/80">
+                <span>Items ({getCartCount()})</span>
+                <span>KSh {getCartTotal()}</span>
+              </div>
+              
+              {showCartSummary && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="border-t border-white/20 pt-3 space-y-2 max-h-48 overflow-y-auto"
+                >
+                  {Object.entries(cart).map(([itemId, count]) => {
+                    const item = menuItems?.find(item => item.id === parseInt(itemId));
+                    if (!item) return null;
+                    return (
+                      <div key={itemId} className="flex items-center justify-between text-sm">
+                        <div className="flex-1">
+                          <p className="text-white truncate">{item.name}</p>
+                          <p className="text-white/60">KSh {item.price} x {count}</p>
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item)}
+                          className="text-red-400 hover:text-red-300 ml-2"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </motion.div>
+              )}
+              
+              <div className="flex space-x-2 pt-2 border-t border-white/20">
+                <button
+                  onClick={clearCart}
+                  className="flex-1 bg-red-500/20 text-red-400 px-3 py-2 rounded-full text-sm font-medium hover:bg-red-500/30 transition-colors"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={proceedToCheckout}
+                  className="flex-1 bg-neon-green text-black px-3 py-2 rounded-full text-sm font-medium hover:bg-green-500 transition-colors flex items-center justify-center"
+                >
+                  Checkout
+                  <FiArrowRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
             </div>
           </motion.div>
         )}

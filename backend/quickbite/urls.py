@@ -19,9 +19,12 @@ def api_info(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', api_info, name='api-info'),
-    # path('api/auth/', include('apps.users.urls')),  # Will be added after initial setup
+    path('api/auth/', include('apps.users.urls')),
     path('api/menu/', include('apps.menu.urls')),
     path('api/orders/', include('apps.orders.urls')),
+    path('api/order/', include('apps.order.urls')),
+    path('api/ai/', include('apps.ai.urls')),
+    path('api/', include('apps.api.urls')),
 ]
 
 if settings.DEBUG:

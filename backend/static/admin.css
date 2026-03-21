@@ -1,0 +1,218 @@
+/* Enhanced Admin Styles for QuickBite */
+
+/* Header styling */
+.dashboard h1 {
+    color: #2c3e50;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 10px;
+}
+
+/* Model header */
+.model-header h2 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 0;
+}
+
+/* List styling */
+.results table {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.results th {
+    background: #34495e;
+    color: white;
+    font-weight: 600;
+}
+
+.results tr:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+/* Button styling */
+.button, input[type=submit], input[type=button] {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.button:hover, input[type=submit]:hover, input[type=button]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Form styling */
+.form-row {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.form-row label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.form-row input, .form-row select, .form-row textarea {
+    border: 2px solid #ecf0f1;
+    border-radius: 5px;
+    padding: 10px;
+    transition: border-color 0.3s ease;
+}
+
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Fieldset styling */
+fieldset {
+    border: 2px solid #ecf0f1;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+fieldset legend {
+    background: #3498db;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 5px;
+    font-weight: 600;
+}
+
+/* Status indicators */
+.status-available {
+    background: #27ae60;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.status-unavailable {
+    background: #e74c3c;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Spice level indicators */
+.spice-mild { background: #2ecc71; color: white; }
+.spice-medium { background: #f39c12; color: white; }
+.spice-hot { background: #e67e22; color: white; }
+.spice-extra-hot { background: #e74c3c; color: white; }
+
+.spice-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+/* Image preview */
+.image-preview {
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid #ecf0f1;
+}
+
+/* Sidebar navigation */
+#nav-sidebar {
+    background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+}
+
+#nav-sidebar a {
+    color: white;
+    padding: 12px 15px;
+    display: block;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+#nav-sidebar a:hover {
+    background-color: #34495e;
+}
+
+#nav-sidebar .current {
+    background-color: #3498db;
+    border-left: 4px solid #2980b9;
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+    background: #ecf0f1;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.breadcrumbs a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+/* Object tools */
+.object-tools {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.object-tools a {
+    margin-right: 10px;
+}
+
+/* Paginator */
+.paginator {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.paginator a, .paginator .this-page {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 2px;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.paginator a {
+    background: #ecf0f1;
+    color: #2c3e50;
+}
+
+.paginator a:hover {
+    background: #3498db;
+    color: white;
+}
+
+.paginator .this-page {
+    background: #3498db;
+    color: white;
+    font-weight: bold;
+}

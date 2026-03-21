@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { EyeIcon, EyeOffIcon } from '@heroicons/react/outline';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 
@@ -158,9 +158,9 @@ const Signup = () => {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
                 >
                   {showPassword ? (
-                    <EyeOffIcon className="w-5 h-5" />
+                    <FiEyeOff className="w-5 h-5" />
                   ) : (
-                    <EyeIcon className="w-5 h-5" />
+                    <FiEye className="w-5 h-5" />
                   )}
                 </button>
               </div>
@@ -184,9 +184,9 @@ const Signup = () => {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
                 >
                   {showConfirmPassword ? (
-                    <EyeOffIcon className="w-5 h-5" />
+                    <FiEyeOff className="w-5 h-5" />
                   ) : (
-                    <EyeIcon className="w-5 h-5" />
+                    <FiEye className="w-5 h-5" />
                   )}
                 </button>
               </div>

@@ -1,0 +1,87 @@
+/* QuickBite Logo Component Styles */
+.quickbite-logo {
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+.quickbite-logo:hover img {
+  transform: scale(1.05);
+  filter: drop-shadow(0 4px 12px rgba(0, 212, 255, 0.25));
+}
+
+.quickbite-logo img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  background: transparent;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .quickbite-logo img {
+    filter: drop-shadow(0 2px 8px rgba(0, 212, 255, 0.15));
+  }
+  
+  .quickbite-logo:hover img {
+    filter: drop-shadow(0 4px 12px rgba(0, 212, 255, 0.25));
+  }
+}
+
+/* Light mode support */
+@media (prefers-color-scheme: light) {
+  .quickbite-logo img {
+    filter: drop-shadow(0 2px 8px rgba(16, 185, 129, 0.15));
+  }
+  
+  .quickbite-logo:hover img {
+    filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.25));
+  }
+}
+
+/* Responsive sizes */
+@media (max-width: 640px) {
+  .quickbite-logo img {
+    border-radius: 6px;
+  }
+}
+
+/* Animation for loading states */
+.quickbite-logo.loading img {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .quickbite-logo img {
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .quickbite-logo img {
+    transition: none;
+  }
+  
+  .quickbite-logo:hover img {
+    transform: none;
+  }
+}
+
+/* Focus styles for accessibility */
+.quickbite-logo:focus-within img {
+  outline: 2px solid #00D4FF;
+  outline-offset: 2px;
+  border-radius: 8px;
+}

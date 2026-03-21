@@ -218,7 +218,7 @@ const Home = () => {
                   <h3 className="text-xl font-semibold mb-2 text-white group-hover:text-neon-blue transition-colors">
                     {item.name}
                   </h3>
-                  <p className="text-white/70 text-sm mb-3 line-clamp-2">{item.description}</p>
+                  <p className="text-white/70 text-sm mb-3 truncate">{item.description}</p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-1">
                       <StarIcon className="w-4 h-4 text-yellow-400 fill-current" />

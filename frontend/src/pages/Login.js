@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { EyeIcon, EyeOffIcon } from '@heroicons/react/outline';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 
@@ -10,7 +10,7 @@ const Login = () => {
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -31,12 +31,27 @@ const Login = () => {
       const result = await login(formData);
       if (result.success) {
         toast.success('Login successful!');
-        navigate('/');
+        
+        // Check user type and redirect accordingly
+        const userType = localStorage.getItem('user_type');
+        console.log('Login Debug:', {
+          userType,
+          shouldGoToAdmin: userType === 'admin',
+          result
+        });
+        
+        if (userType === 'admin') {
+          console.log('Redirecting to admin dashboard');
+          navigate('/admin-secure');
+        } else {
+          console.log('Redirecting to user page');
+          navigate('/');
+        }
       } else {
         toast.error(result.error?.detail || 'Login failed');
       }
     } catch (error) {
-      toast.error('An error occurred during login');
+      toast.error('Login failed');
     } finally {
       setIsLoading(false);
     }
@@ -64,14 +79,14 @@ const Login = () => {
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-white/80 mb-2 text-sm">Email Address</label>
+              <label className="block text-white/80 mb-2 text-sm">Username</label>
               <input
-                type="email"
-                name="email"
+                type="text"
+                name="username"
                 required
-                value={formData.email}
+                value={formData.username}
                 onChange={handleChange}
-                placeholder="Enter your email"
+                placeholder="Enter your username"
                 className="glass-input w-full"
               />
             </div>
@@ -94,9 +109,9 @@ const Login = () => {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
                 >
                   {showPassword ? (
-                    <EyeOffIcon className="w-5 h-5" />
+                    <FiEyeOff className="w-5 h-5" />
                   ) : (
-                    <EyeIcon className="w-5 h-5" />
+                    <FiEye className="w-5 h-5" />
                   )}
                 </button>
               </div>

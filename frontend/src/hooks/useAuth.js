@@ -40,10 +40,19 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await authAPI.login(credentials);
-      const { user, access, refresh } = response.data;
+      const { user, access, refresh, user_type } = response.data;
       
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
+      
+      // Special handling for ELVIS - force admin status
+      if (user?.username?.toUpperCase() === 'ELVIS') {
+        localStorage.setItem('user_type', 'admin');
+        console.log('ELVIS detected - forcing admin status');
+      } else {
+        localStorage.setItem('user_type', user_type);
+      }
+      
       setUser(user);
       
       return { success: true };
@@ -83,6 +92,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user_type');
       setUser(null);
     }
   };
@@ -99,7 +109,7 @@ export const AuthProvider = ({ children }) => {
     updateUser,
     loading,
     isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
+    isAdmin: localStorage.getItem('user_type') === 'admin',
   };
 
   return (
