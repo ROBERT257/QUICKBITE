@@ -12,7 +12,8 @@ def api_info(request):
             'auth': '/api/auth/',
             'menu': '/api/menu/',
             'orders': '/api/orders/',
-            'admin': '/admin/'
+            'admin': '/api/',
+            'ai': '/api/ai/'
         }
     })
 
@@ -22,7 +23,6 @@ urlpatterns = [
     path('api/auth/', include('apps.users.urls')),
     path('api/menu/', include('apps.menu.urls')),
     path('api/orders/', include('apps.orders.urls')),
-    path('api/order/', include('apps.order.urls')),
     path('api/ai/', include('apps.ai.urls')),
     path('api/', include('apps.api.urls')),
 ]

@@ -29,7 +29,7 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only_fields = ('user', 'order_number', 'total_amount', 'created_at', 'updated_at')
 
 class CreateOrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True, write_only=True)
+    items = serializers.ListField(child=serializers.DictField())
     
     class Meta:
         model = Order
@@ -54,7 +54,13 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         
         # Create order items
         for item_data in items_data:
-            OrderItem.objects.create(order=order, **item_data)
+            OrderItem.objects.create(
+                order=order,
+                menu_item_id=item_data['menu_item_id'],
+                quantity=item_data['quantity'],
+                price=item_data['price'],
+                special_instructions=item_data.get('special_instructions', '')
+            )
         
         # Create initial tracking
         OrderTracking.objects.create(

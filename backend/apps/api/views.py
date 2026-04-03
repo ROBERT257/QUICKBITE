@@ -8,6 +8,7 @@ from django.db import models
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.menu.models import MenuItem, Category
+from django.contrib.auth import get_user_model
 
 @api_view(['POST'])
 @permission_classes([])
@@ -70,7 +71,8 @@ def admin_login(request):
 def admin_stats(request):
     """Get admin dashboard statistics"""
     try:
-        from apps.order.models import Order
+        from apps.orders.models import Order
+        from apps.menu.models import MenuItem, Category
         
         total_items = MenuItem.objects.count()
         available_items = MenuItem.objects.filter(is_available=True).count()
@@ -96,14 +98,15 @@ def admin_stats(request):
         )['total'] or 0
         
         return Response({
-            'total_items': total_items,
-            'available_items': available_items,
-            'featured_items': featured_items,
-            'total_categories': total_categories,
-            'today_orders': today_orders,
-            'pending_orders': pending_orders,
-            'completed_orders': completed_orders,
-            'total_revenue': total_revenue
+            'totalUsers': 0,  # Will be updated when we have user stats
+            'totalOrders': Order.objects.count(),
+            'totalRevenue': total_revenue,
+            'activeFoods': available_items,
+            'pendingOrders': pending_orders,
+            'todayRevenue': Order.objects.filter(
+                status='delivered',
+                created_at__date=timezone.now().date()
+            ).aggregate(total=models.Sum('total_amount'))['total'] or 0
         })
     except Exception as e:
         return Response(
@@ -116,26 +119,15 @@ def admin_stats(request):
 def admin_orders(request):
     """Get all orders for admin"""
     try:
-        from apps.order.models import Order
+        from apps.orders.models import Order
         
         orders = Order.objects.all().order_by('-created_at')
         
-        orders_data = []
-        for order in orders:
-            orders_data.append({
-                'id': order.id,
-                'customer_name': order.customer_name,
-                'customer_phone': order.customer_phone,
-                'customer_email': order.customer_email,
-                'delivery_address': order.delivery_address,
-                'total_amount': order.total_amount,
-                'status': order.status,
-                'created_at': order.created_at.isoformat(),
-                'delivery_time': order.delivery_time.isoformat() if order.delivery_time else None,
-                'items': order.items if hasattr(order, 'items') else []
-            })
+        # Use the same serializer as the OrderViewSet
+        from apps.orders.serializers import OrderSerializer
+        serializer = OrderSerializer(orders, many=True)
         
-        return Response(orders_data)
+        return Response(serializer.data)
     except Exception as e:
         return Response(
             {'error': str(e)}, 
@@ -147,7 +139,8 @@ def admin_orders(request):
 def update_order_status(request, order_id):
     """Update order status"""
     try:
-        from apps.order.models import Order
+        from apps.orders.models import Order
+        from apps.orders.serializers import OrderStatusUpdateSerializer
         
         order = Order.objects.get(id=order_id)
         new_status = request.data.get('status')
@@ -159,19 +152,25 @@ def update_order_status(request, order_id):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        order.status = new_status
+        # Use the same serializer as the OrderViewSet
+        serializer = OrderStatusUpdateSerializer(order, data={'status': new_status}, partial=True)
+        if serializer.is_valid():
+            old_status = order.status
+            order = serializer.save()
+            
+            # Set delivery time when order is marked as delivered
+            if new_status == 'delivered' and not order.delivery_time:
+                from django.utils import timezone
+                order.delivery_time = timezone.now()
+                order.save()
+            
+            return Response({
+                'message': f'Order status updated to {new_status}',
+                'status': new_status
+            })
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-        # Set delivery time when order is marked as delivered
-        if new_status == 'delivered' and not order.delivery_time:
-            from django.utils import timezone
-            order.delivery_time = timezone.now()
-        
-        order.save()
-        
-        return Response({
-            'message': f'Order status updated to {new_status}',
-            'status': new_status
-        })
     except Order.DoesNotExist:
         return Response(
             {'error': 'Order not found'}, 

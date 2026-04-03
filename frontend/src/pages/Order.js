@@ -17,6 +17,7 @@ import { menuAPI, ordersAPI } from '../services/api';
 import { useQuery } from 'react-query';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
+import realtimeService from '../services/realtime';
 
 const Order = () => {
   const { user, isAuthenticated } = useAuth();
@@ -137,20 +138,16 @@ const Order = () => {
     try {
       // Create order payload for new API
       const orderPayload = {
-        customer_name: user?.name || 'Customer',
-        customer_email: user?.email || '',
-        customer_phone: orderData.phone_number,
+        payment_method: orderData.payment_method,
         delivery_address: orderData.delivery_address,
-        items: cart.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: parseFloat(item.price),
-          quantity: item.quantity
-        })),
-        total_amount: calculateTotal(),
-        status: 'pending',
+        phone_number: orderData.phone_number,
         special_instructions: orderData.special_instructions,
-        payment_method: orderData.payment_method
+        items: cart.map(item => ({
+          menu_item_id: item.id,
+          quantity: item.quantity,
+          price: parseFloat(item.price),
+          special_instructions: item.special_instructions || ''
+        }))
       };
 
       // Try to create order via API
@@ -167,6 +164,13 @@ const Order = () => {
         if (response.ok) {
           const order = await response.json();
           toast.success('Order placed successfully! Your order #' + order.id + ' is being processed.');
+          
+          // Trigger real-time update for admin dashboard
+          realtimeService.triggerOrderCheck();
+          realtimeService.sendNotification(
+            `New order #${order.id} placed by ${user?.name || 'Customer'}`,
+            'new_order'
+          );
           
           // Clear cart and redirect
           setCart([]);

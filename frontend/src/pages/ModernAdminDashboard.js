@@ -1,44 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiHome, FiUsers, FiShoppingCart, FiSettings, FiTrendingUp, FiPackage, FiDollarSign, FiClock, FiSearch, FiFilter, FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiCheck, FiX, FiMenu, FiLogOut } from 'react-icons/fi';
+import { FiHome, FiUsers, FiShoppingCart, FiSettings, FiTrendingUp, FiPackage, FiDollarSign, FiClock, FiSearch, FiFilter, FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiCheck, FiX, FiMenu, FiLogOut, FiRefreshCw } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('overview');
   const [darkMode, setDarkMode] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  // Mock data - replace with real API calls
-  const [stats, setStats] = useState({
-    totalUsers: 1247,
-    totalOrders: 3582,
-    totalRevenue: 45678.90,
-    activeFoods: 156,
-    pendingOrders: 47,
-    todayRevenue: 2341.50
+  const [showFoodModal, setShowFoodModal] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [selectedFood, setSelectedFood] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [newFood, setNewFood] = useState({
+    name: '',
+    category: 'Burgers',
+    price: '',
+    description: '',
+    image: '',
+    status: 'Available'
+  });
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    role: 'Customer',
+    status: 'Active'
   });
 
-  const [users, setUsers] = useState([
-    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Customer', status: 'Active', joinDate: '2024-01-15' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Admin', status: 'Active', joinDate: '2024-01-10' },
-    { id: 3, name: 'Mike Johnson', email: 'mike@example.com', role: 'Customer', status: 'Inactive', joinDate: '2024-02-01' },
-    { id: 4, name: 'Sarah Wilson', email: 'sarah@example.com', role: 'Vendor', status: 'Active', joinDate: '2024-01-20' },
-  ]);
+  // Real data states
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    activeFoods: 0,
+    pendingOrders: 0,
+    todayRevenue: 0
+  });
 
-  const [foods, setFoods] = useState([
-    { id: 1, name: 'Classic Burger', category: 'Burgers', price: 12.99, status: 'Available', image: '🍔', orders: 234 },
-    { id: 2, name: 'Cheese Pizza', category: 'Pizza', price: 18.99, status: 'Available', image: '🍕', orders: 189 },
-    { id: 3, name: 'Chicken Wings', category: 'Appetizers', price: 8.99, status: 'Out of Stock', image: '🍗', orders: 156 },
-    { id: 4, name: 'Caesar Salad', category: 'Salads', price: 7.99, status: 'Available', image: '🥗', orders: 98 },
-    { id: 5, name: 'Chocolate Shake', category: 'Desserts', price: 4.99, status: 'Available', image: '🥤', orders: 267 },
-  ]);
-
-  const [orders, setOrders] = useState([
-    { id: 1, customer: 'John Doe', items: 3, total: 45.97, status: 'Pending', time: '2 mins ago' },
-    { id: 2, customer: 'Jane Smith', items: 2, total: 37.98, status: 'Preparing', time: '5 mins ago' },
-    { id: 3, customer: 'Mike Johnson', items: 5, total: 89.95, status: 'Delivered', time: '15 mins ago' },
-    { id: 4, customer: 'Sarah Wilson', items: 1, total: 12.99, status: 'Pending', time: '1 min ago' },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [foods, setFoods] = useState([]);
+  const [orders, setOrders] = useState([]);
 
   const sidebarItems = [
     { id: 'overview', label: 'Dashboard', icon: FiHome },
@@ -60,6 +63,165 @@ const AdminDashboard = () => {
     // In real app, redirect to login
   };
 
+  // Real API Functions
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch('http://localhost:8000/api/admin/stats/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchFoods = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch('http://localhost:8000/api/menu/items/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFoods(data.results || data);
+      }
+    } catch (error) {
+      console.error('Error fetching foods:', error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch('http://localhost:8000/api/admin/users/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch('http://localhost:8000/api/orders/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setOrders(data.results || data);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  };
+
+  // Handler Functions for Food Management
+  const handleToggleFoodStatus = async (food) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const newStatus = !food.is_available;
+      
+      const response = await fetch(`http://localhost:8000/api/menu/items/${food.id}/`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...food,
+          is_available: newStatus
+        })
+      });
+
+      if (response.ok) {
+        toast.success(`${food.name} is now ${newStatus ? 'Available' : 'Out of Stock'}!`);
+        fetchFoods(); // Refresh data
+        fetchStats(); // Refresh stats
+      } else {
+        toast.error('Failed to update food status');
+      }
+    } catch (error) {
+      toast.error('Error updating food status');
+    }
+  };
+
+  const handleEditFood = async (food) => {
+    setSelectedFood(food);
+    setNewFood({
+      name: food.name,
+      category: food.category,
+      price: food.price,
+      description: food.description || '',
+      image: food.image || '',
+      status: food.is_available ? 'Available' : 'Out of Stock'
+    });
+    setIsEditMode(true);
+    setShowFoodModal(true);
+  };
+
+  const handleDeleteFood = async (food) => {
+    if (window.confirm(`Are you sure you want to delete ${food.name}?`)) {
+      try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`http://localhost:8000/api/menu/items/${food.id}/`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          toast.success(`${food.name} deleted successfully!`);
+          fetchFoods(); // Refresh data
+          fetchStats(); // Refresh stats
+        } else {
+          toast.error('Failed to delete food item');
+        }
+      } catch (error) {
+        toast.error('Error deleting food item');
+      }
+    }
+  };
+
+  const handleAddFood = () => {
+    setSelectedFood(null);
+    setNewFood({
+      name: '',
+      category: 'Burgers',
+      price: '',
+      description: '',
+      image: '',
+      status: 'Available'
+    });
+    setIsEditMode(false);
+    setShowFoodModal(true);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'Active': case 'Available': return 'text-green-400';
@@ -69,6 +231,301 @@ const AdminDashboard = () => {
       case 'Delivered': return 'text-green-400';
       default: return 'text-gray-400';
     }
+  };
+
+  const handleSaveFood = async () => {
+    if (!newFood.name || !newFood.price) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const formData = new FormData();
+      formData.append('name', newFood.name);
+      formData.append('category', newFood.category);
+      formData.append('price', newFood.price);
+      formData.append('description', newFood.description);
+      formData.append('is_available', newFood.status === 'Available');
+
+      let response;
+      if (isEditMode && selectedFood) {
+        // Update existing food
+        response = await fetch(`http://localhost:8000/api/menu/items/${selectedFood.id}/`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+      } else {
+        // Add new food
+        response = await fetch('http://localhost:8000/api/menu/items/', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+      }
+
+      if (response.ok) {
+        toast.success(`${newFood.name} ${isEditMode ? 'updated' : 'added'} successfully!`);
+        setShowFoodModal(false);
+        fetchFoods(); // Refresh data
+        fetchStats(); // Refresh stats
+      } else {
+        toast.error(`Failed to ${isEditMode ? 'update' : 'add'} food item`);
+      }
+    } catch (error) {
+      toast.error(`Error ${isEditMode ? 'updating' : 'adding'} food item`);
+    } finally {
+      setSubmitting(false);
+    }
+
+    // Reset form
+    setNewFood({
+      name: '',
+      category: 'Burgers',
+      price: '',
+      description: '',
+      image: '',
+      status: 'Available'
+    });
+    setIsEditMode(false);
+    setSelectedFood(null);
+  };
+
+  // Real API User Functions
+  const handleAddUser = () => {
+    setSelectedUser(null);
+    setNewUser({
+      name: '',
+      email: '',
+      role: 'Customer',
+      status: 'Active'
+    });
+    setIsEditMode(false);
+    setShowUserModal(true);
+  };
+
+  const handleSaveUser = async () => {
+    if (!newUser.name || !newUser.email) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      let response;
+      
+      if (isEditMode && selectedUser) {
+        // Update existing user
+        response = await fetch(`http://localhost:8000/api/admin/users/${selectedUser.id}/`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: newUser.email,
+            first_name: newUser.name.split(' ')[0],
+            last_name: newUser.name.split(' ')[1] || '',
+            role: newUser.role.toLowerCase(),
+            is_active: newUser.status === 'Active'
+          })
+        });
+      } else {
+        // Add new user
+        response = await fetch('http://localhost:8000/api/admin/users/', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: newUser.email.split('@')[0],
+            email: newUser.email,
+            first_name: newUser.name.split(' ')[0],
+            last_name: newUser.name.split(' ')[1] || '',
+            role: newUser.role.toLowerCase(),
+            is_active: newUser.status === 'Active'
+          })
+        });
+      }
+
+      if (response.ok) {
+        toast.success(`${newUser.name} ${isEditMode ? 'updated' : 'added'} successfully!`);
+        setShowUserModal(false);
+        fetchUsers(); // Refresh data
+        fetchStats(); // Refresh stats
+      } else {
+        toast.error(`Failed to ${isEditMode ? 'update' : 'add'} user`);
+      }
+    } catch (error) {
+      toast.error(`Error ${isEditMode ? 'updating' : 'adding'} user`);
+    } finally {
+      setSubmitting(false);
+    }
+
+    // Reset form
+    setNewUser({
+      name: '',
+      email: '',
+      role: 'Customer',
+      status: 'Active'
+    });
+    setIsEditMode(false);
+    setSelectedUser(null);
+  };
+
+  const handleEditUser = async (user) => {
+    setSelectedUser(user);
+    setNewUser({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.is_active ? 'Active' : 'Inactive'
+    });
+    setIsEditMode(true);
+    setShowUserModal(true);
+  };
+
+  const handleUpdateUser = async () => {
+    if (!newUser.name || !newUser.email) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`http://localhost:8000/api/admin/users/${selectedUser.id}/`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: newUser.email,
+          first_name: newUser.name.split(' ')[0],
+          last_name: newUser.name.split(' ')[1] || '',
+          role: newUser.role.toLowerCase(),
+          is_active: newUser.status === 'Active'
+        })
+      });
+
+      if (response.ok) {
+        toast.success(`${newUser.name} updated successfully!`);
+        setShowUserModal(false);
+        fetchUsers(); // Refresh data
+      } else {
+        toast.error('Failed to update user');
+      }
+    } catch (error) {
+      toast.error('Error updating user');
+    }
+  };
+
+  const handleDeleteUser = async (user) => {
+    if (window.confirm(`Are you sure you want to delete ${user.name}?`)) {
+      try {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`http://localhost:8000/api/admin/users/${user.id}/`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          toast.success(`${user.name} deleted successfully!`);
+          fetchUsers(); // Refresh data
+          fetchStats(); // Refresh stats
+        } else {
+          toast.error('Failed to delete user');
+        }
+      } catch (error) {
+        toast.error('Error deleting user');
+      }
+    }
+  };
+
+  // Real API Order Functions
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      // Map frontend status to backend status
+      const statusMapping = {
+        'Pending': 'pending',
+        'Preparing': 'preparing', 
+        'Delivered': 'delivered'
+      };
+      
+      const backendStatus = statusMapping[newStatus] || newStatus.toLowerCase();
+      
+      const response = await fetch(`http://localhost:8000/api/admin/orders/${orderId}/status/`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: backendStatus })
+      });
+
+      if (response.ok) {
+        toast.success(`Order ${orderId} status updated to ${newStatus}!`);
+        fetchOrders(); // Refresh data
+        fetchStats(); // Refresh stats
+      } else {
+        toast.error('Failed to update order status');
+      }
+    } catch (error) {
+      toast.error('Error updating order status');
+    }
+  };
+
+  // Load all data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchStats(),
+          fetchFoods(),
+          fetchUsers(),
+          fetchOrders()
+        ]);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Real-time order polling
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchOrders(); // Refresh orders every 5 seconds
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [activeSection]); // Only poll when on orders section
+
+  // Show loading state while fetching data
+  if (loading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading Admin Dashboard...</p>
+        </div>
+      </div>
+    );
   };
 
   const getStatusBadge = (status) => {
@@ -278,6 +735,7 @@ const AdminDashboard = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={handleAddFood}
                   className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium flex items-center"
                 >
                   <FiPlus className="w-5 h-5 mr-2" />
@@ -343,15 +801,17 @@ const AdminDashboard = () => {
                               <motion.button
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
+                                onClick={() => handleToggleFoodStatus(food)}
                                 className={`p-2 rounded-lg transition-all duration-200 ${
-                                  darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-100 text-blue-600'
+                                  darkMode ? 'hover:bg-gray-600 text-yellow-400' : 'hover:bg-gray-100 text-yellow-600'
                                 }`}
                               >
-                                <FiEye className="w-4 h-4" />
+                                {food.status === 'Available' ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                               </motion.button>
                               <motion.button
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
+                                onClick={() => handleEditFood(food)}
                                 className={`p-2 rounded-lg transition-all duration-200 ${
                                   darkMode ? 'hover:bg-gray-600 text-green-400' : 'hover:bg-gray-100 text-green-600'
                                 }`}
@@ -361,6 +821,7 @@ const AdminDashboard = () => {
                               <motion.button
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
+                                onClick={() => handleDeleteFood(food)}
                                 className={`p-2 rounded-lg transition-all duration-200 ${
                                   darkMode ? 'hover:bg-gray-600 text-red-400' : 'hover:bg-gray-100 text-red-600'
                                 }`}
@@ -378,17 +839,85 @@ const AdminDashboard = () => {
             </motion.div>
           )}
 
-          {activeSection === 'users' && (
+          {activeSection === 'orders' && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
               <div className="flex items-center justify-between mb-8">
+                <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Order Management</h2>
+                <div className="flex items-center space-x-3">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={fetchOrders}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium flex items-center"
+                  >
+                    <FiRefreshCw className="w-5 h-5 mr-2" />
+                    Refresh Orders
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Recent Orders */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6 border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}
+                >
+                  <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Recent Orders</h3>
+                  <div className="space-y-3">
+                    {orders.slice(0, 5).map((order) => (
+                      <div key={order.id} className={`flex items-center justify-between p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                        <div>
+                          <p className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>{order.customer}</p>
+                          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{order.items} items • ${order.total}</p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <select
+                            value={order.status}
+                            onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                            className={`px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                          >
+                            <option>Pending</option>
+                            <option>Preparing</option>
+                            <option>Delivered</option>
+                          </select>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleUpdateOrderStatus(order.id, 'Delivered')}
+                            className={`p-2 rounded-lg transition-all duration-200 ${
+                              darkMode ? 'hover:bg-gray-600 text-green-400' : 'hover:bg-gray-100 text-green-600'
+                            }`}
+                          >
+                            <FiCheck className="w-4 h-4" />
+                          </motion.button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeSection === 'users' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+            >
+              <div className="flex items-center justify-between mb-8">
                 <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>User Management</h2>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={handleAddUser}
                   className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium flex items-center"
                 >
                   <FiPlus className="w-5 h-5 mr-2" />
@@ -480,6 +1009,177 @@ const AdminDashboard = () => {
           )}
         </main>
       </div>
+
+      {/* Add/Edit Food Modal */}
+      {showFoodModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 w-full max-w-md`}
+          >
+            <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+              {isEditMode ? 'Edit Food' : 'Add New Food'}
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Name</label>
+                <input
+                  type="text"
+                  value={newFood.name}
+                  onChange={(e) => setNewFood({...newFood, name: e.target.value})}
+                  className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+                  placeholder="Food name"
+                />
+              </div>
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Category</label>
+                <select
+                  value={newFood.category}
+                  onChange={(e) => setNewFood({...newFood, category: e.target.value})}
+                  className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+                >
+                  <option>Burgers</option>
+                  <option>Pizza</option>
+                  <option>Appetizers</option>
+                  <option>Salads</option>
+                  <option>Desserts</option>
+                </select>
+              </div>
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Price</label>
+                <input
+                  type="number"
+                  value={newFood.price}
+                  onChange={(e) => setNewFood({...newFood, price: e.target.value})}
+                  className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+                  placeholder="0.00"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Status</label>
+                <select
+                  value={newFood.status}
+                  onChange={(e) => setNewFood({...newFood, status: e.target.value})}
+                  className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+                >
+                  <option>Available</option>
+                  <option>Out of Stock</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowFoodModal(false)}
+                className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+              >
+                Cancel
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSaveFood}
+                disabled={submitting}
+                className={`px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {submitting ? 'Saving...' : (isEditMode ? 'Update' : 'Add') + ' Food'}
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Add/Edit User Modal */}
+      {showUserModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 w-full max-w-md`}
+          >
+            <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+              {isEditMode ? 'Edit User' : 'Add New User'}
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Name</label>
+                <input
+                  type="text"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                  className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+                  placeholder="User name"
+                />
+              </div>
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Email</label>
+                <input
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                  className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+                  placeholder="user@example.com"
+                />
+              </div>
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Role</label>
+                <select
+                  value={newUser.role}
+                  onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                  className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+                >
+                  <option>Customer</option>
+                  <option>Admin</option>
+                  <option>Vendor</option>
+                </select>
+              </div>
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Status</label>
+                <select
+                  value={newUser.status}
+                  onChange={(e) => setNewUser({...newUser, status: e.target.value})}
+                  className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+                >
+                  <option>Active</option>
+                  <option>Inactive</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowUserModal(false)}
+                className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+              >
+                Cancel
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSaveUser}
+                disabled={submitting}
+                className={`px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {submitting ? 'Saving...' : (isEditMode ? 'Update' : 'Add') + ' User'}
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 };

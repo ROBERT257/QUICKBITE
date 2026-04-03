@@ -30,7 +30,6 @@ LOCAL_APPS = [
     'apps.orders',
     'apps.ai',
     'apps.api',
-    'apps.order',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -152,6 +151,8 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://127.0.0.1:64366",
+    "http://localhost:64366",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
