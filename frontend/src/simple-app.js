@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 
 const App = () => {
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600">
       <div className="container mx-auto px-4 py-8">
@@ -33,20 +35,20 @@ const App = () => {
             <h3 className="text-2xl font-bold text-white mb-4">System Status</h3>
             <div className="glass-morphism rounded-xl p-6">
               <div className="text-green-400 mb-2">✅ Frontend: React Working</div>
-              <div className="text-green-400 mb-2">✅ Backend: <a href="http://localhost:8000" className="underline">API Running</a></div>
-              <div className="text-green-400">✅ Database: MySQL Connected</div>
+              <div className="text-green-400 mb-2">✅ Backend: <a href={`${API_BASE_URL}`} className="underline">API Running</a></div>
+              <div className="text-green-400">✅ Database: SQLite Connected</div>
             </div>
           </div>
 
           <div className="text-center mt-8">
             <button 
-              onClick={() => window.open('http://localhost:8000/admin', '_blank')}
+              onClick={() => window.open(`${API_BASE_URL}/admin`, '_blank')}
               className="bg-white/20 hover:bg-white/30 text-white px-8 py-3 rounded-full transition-all duration-300 mr-4"
             >
               🛠️ Admin Panel
             </button>
             <button 
-              onClick={() => window.open('http://localhost:8000/api', '_blank')}
+              onClick={() => window.open(`${API_BASE_URL}/api`, '_blank')}
               className="bg-white/20 hover:bg-white/30 text-white px-8 py-3 rounded-full transition-all duration-300"
             >
               📡 API Docs

@@ -4,6 +4,8 @@ import { FiHome, FiUsers, FiShoppingCart, FiSettings, FiTrendingUp, FiPackage, F
 import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  
   const [activeSection, setActiveSection] = useState('overview');
   const [darkMode, setDarkMode] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -67,7 +69,7 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/admin/stats/', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/stats/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -86,7 +88,7 @@ const AdminDashboard = () => {
   const fetchFoods = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/menu/items/', {
+      const response = await fetch(`${API_BASE_URL}/api/menu/items/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -105,7 +107,7 @@ const AdminDashboard = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/admin/users/', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -124,7 +126,7 @@ const AdminDashboard = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/orders/', {
+      const response = await fetch(`${API_BASE_URL}/api/orders/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -146,7 +148,7 @@ const AdminDashboard = () => {
       const token = localStorage.getItem('access_token');
       const newStatus = !food.is_available;
       
-      const response = await fetch(`http://localhost:8000/api/menu/items/${food.id}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/menu/items/${food.id}/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -188,7 +190,7 @@ const AdminDashboard = () => {
     if (window.confirm(`Are you sure you want to delete ${food.name}?`)) {
       try {
         const token = localStorage.getItem('access_token');
-        const response = await fetch(`http://localhost:8000/api/menu/items/${food.id}/`, {
+        const response = await fetch(`${API_BASE_URL}/api/menu/items/${food.id}/`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -252,7 +254,7 @@ const AdminDashboard = () => {
       let response;
       if (isEditMode && selectedFood) {
         // Update existing food
-        response = await fetch(`http://localhost:8000/api/menu/items/${selectedFood.id}/`, {
+        response = await fetch(`${API_BASE_URL}/api/menu/items/${selectedFood.id}/`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -261,7 +263,7 @@ const AdminDashboard = () => {
         });
       } else {
         // Add new food
-        response = await fetch('http://localhost:8000/api/menu/items/', {
+        response = await fetch(`${API_BASE_URL}/api/menu/items/`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -323,7 +325,7 @@ const AdminDashboard = () => {
       
       if (isEditMode && selectedUser) {
         // Update existing user
-        response = await fetch(`http://localhost:8000/api/admin/users/${selectedUser.id}/`, {
+        response = await fetch(`${API_BASE_URL}/api/admin/users/${selectedUser.id}/`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -339,7 +341,7 @@ const AdminDashboard = () => {
         });
       } else {
         // Add new user
-        response = await fetch('http://localhost:8000/api/admin/users/', {
+        response = await fetch(`${API_BASE_URL}/api/admin/users/`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -401,7 +403,7 @@ const AdminDashboard = () => {
 
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:8000/api/admin/users/${selectedUser.id}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/${selectedUser.id}/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -432,7 +434,7 @@ const AdminDashboard = () => {
     if (window.confirm(`Are you sure you want to delete ${user.name}?`)) {
       try {
         const token = localStorage.getItem('access_token');
-        const response = await fetch(`http://localhost:8000/api/admin/users/${user.id}/`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/users/${user.id}/`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -466,7 +468,7 @@ const AdminDashboard = () => {
       
       const backendStatus = statusMapping[newStatus] || newStatus.toLowerCase();
       
-      const response = await fetch(`http://localhost:8000/api/admin/orders/${orderId}/status/`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/status/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -910,7 +912,6 @@ const AdminDashboard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-            >
             >
               <div className="flex items-center justify-between mb-8">
                 <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>User Management</h2>

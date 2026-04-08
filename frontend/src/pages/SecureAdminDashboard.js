@@ -36,6 +36,8 @@ import realtimeService from '../services/realtime';
 import QuickBiteLogo from '../components/QuickBiteLogo';
 
 const SecureAdminDashboard = () => {
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -136,7 +138,7 @@ const SecureAdminDashboard = () => {
   const fetchMenuItems = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/menu/items/', {
+      const response = await fetch(`${API_BASE_URL}/api/menu/items/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -157,7 +159,7 @@ const SecureAdminDashboard = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/menu/categories/', {
+      const response = await fetch(`${API_BASE_URL}/api/menu/categories/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -196,7 +198,7 @@ const SecureAdminDashboard = () => {
       const token = localStorage.getItem('access_token');
       
       // Try admin-specific endpoint first
-      let response = await fetch('http://localhost:8000/api/orders/admin_orders/', {
+      let response = await fetch(`${API_BASE_URL}/api/orders/admin_orders/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -205,7 +207,7 @@ const SecureAdminDashboard = () => {
       // If admin endpoint fails, fallback to regular orders
       if (!response.ok) {
         console.log('Admin endpoint failed, trying regular orders endpoint');
-        response = await fetch('http://localhost:8000/api/orders/', {
+        response = await fetch(`${API_BASE_URL}/api/orders/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -264,7 +266,7 @@ const SecureAdminDashboard = () => {
       const token = localStorage.getItem('access_token');
       console.log('Admin updating order:', { orderId, newStatus });
       
-      const response = await fetch(`http://localhost:8000/api/orders/${orderId}/update_status/`, {
+      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/update_status/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -336,8 +338,8 @@ const SecureAdminDashboard = () => {
     try {
       const token = localStorage.getItem('access_token');
       const url = editingItem 
-        ? `http://localhost:8000/api/menu/${editingItem.id}/`
-        : 'http://localhost:8000/api/menu/';
+        ? `${API_BASE_URL}/api/menu/${editingItem.id}/`
+        : `${API_BASE_URL}/api/menu/`;
       
       const method = editingItem ? 'PUT' : 'POST';
       
@@ -388,7 +390,7 @@ const SecureAdminDashboard = () => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
         const token = localStorage.getItem('access_token');
-        const response = await fetch(`http://localhost:8000/api/menu/${itemId}/`, {
+        const response = await fetch(`${API_BASE_URL}/api/menu/${itemId}/`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -411,7 +413,7 @@ const SecureAdminDashboard = () => {
   const toggleAvailability = async (item) => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:8000/api/menu/${item.id}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/menu/${item.id}/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -436,7 +438,7 @@ const SecureAdminDashboard = () => {
   const toggleFeatured = async (item) => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:8000/api/menu/${item.id}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/menu/${item.id}/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -470,7 +472,7 @@ const SecureAdminDashboard = () => {
           const token = localStorage.getItem('access_token');
           await Promise.all(
             selectedItems.map(id => 
-              fetch(`http://localhost:8000/api/menu/${id}/`, { 
+              fetch(`${API_BASE_URL}/api/menu/${id}/`, { 
                 method: 'DELETE',
                 headers: {
                   'Authorization': `Bearer ${token}`
@@ -492,7 +494,7 @@ const SecureAdminDashboard = () => {
         const token = localStorage.getItem('access_token');
         await Promise.all(
           selectedItems.map(id => 
-            fetch(`http://localhost:8000/api/menu/${id}/`, {
+            fetch(`${API_BASE_URL}/api/menu/${id}/`, {
               method: 'PUT',
               headers: { 
                 'Authorization': `Bearer ${token}`,
@@ -515,7 +517,7 @@ const SecureAdminDashboard = () => {
         const token = localStorage.getItem('access_token');
         await Promise.all(
           selectedItems.map(id => 
-            fetch(`http://localhost:8000/api/menu/${id}/`, {
+            fetch(`${API_BASE_URL}/api/menu/${id}/`, {
               method: 'PUT',
               headers: { 
                 'Authorization': `Bearer ${token}`,
@@ -569,7 +571,7 @@ const SecureAdminDashboard = () => {
         image: null
       };
 
-      const response = await fetch('http://localhost:8000/api/menu/', {
+      const response = await fetch(`${API_BASE_URL}/api/menu/`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -974,7 +976,7 @@ const SecureAdminDashboard = () => {
                       <div className="relative h-48 bg-gradient-to-br from-white/10 to-white/5">
                         {item.image && (
                           <img
-                            src={item.image.startsWith('http') ? item.image : `http://localhost:8000${item.image}`}
+                            src={item.image.startsWith('http') ? item.image : `${API_BASE_URL}${item.image}`}
                             alt={item.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
@@ -1114,7 +1116,7 @@ const SecureAdminDashboard = () => {
                               <div className="w-12 h-12 bg-gradient-to-br from-white/10 to-white/5 rounded-lg overflow-hidden">
                                 {item.image ? (
                                   <img
-                                    src={item.image.startsWith('http') ? item.image : `http://localhost:8000${item.image}`}
+                                    src={item.image.startsWith('http') ? item.image : `${API_BASE_URL}${item.image}`}
                                     alt={item.name}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {

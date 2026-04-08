@@ -4,6 +4,8 @@ import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiFilter, FiUpload, FiImage, FiDol
 import toast from 'react-hot-toast';
 
 const AdminFoodManager = () => {
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +32,7 @@ const AdminFoodManager = () => {
 
   const fetchMenuItems = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/menu/');
+      const response = await fetch(`${API_BASE_URL}/api/menu/`);
       const data = await response.json();
       setMenuItems(data);
       setLoading(false);
@@ -42,7 +44,7 @@ const AdminFoodManager = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/categories/');
+      const response = await fetch(`${API_BASE_URL}/api/categories/`);
       const data = await response.json();
       setCategories(data);
     } catch (error) {
@@ -80,8 +82,8 @@ const AdminFoodManager = () => {
 
     try {
       const url = editingItem 
-        ? `http://localhost:8000/api/menu/${editingItem.id}/`
-        : 'http://localhost:8000/api/menu/';
+        ? `${API_BASE_URL}/api/menu/${editingItem.id}/`
+        : `${API_BASE_URL}/api/menu/`;
       
       const method = editingItem ? 'PUT' : 'POST';
       
@@ -110,7 +112,7 @@ const AdminFoodManager = () => {
   const handleDelete = async (itemId) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
-        const response = await fetch(`http://localhost:8000/api/menu/${itemId}/`, {
+        const response = await fetch(`${API_BASE_URL}/api/menu/${itemId}/`, {
           method: 'DELETE'
         });
         
@@ -128,7 +130,7 @@ const AdminFoodManager = () => {
 
   const toggleAvailability = async (item) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/menu/${item.id}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/menu/${item.id}/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -337,7 +339,7 @@ const AdminFoodManager = () => {
               <div className="relative h-48 bg-gradient-to-br from-white/10 to-white/5">
                 {item.image && (
                   <img
-                    src={item.image.startsWith('http') ? item.image : `http://localhost:8000${item.image}`}
+                    src={item.image.startsWith('http') ? item.image : `${API_BASE_URL}${item.image}`}
                     alt={item.name}
                     className="w-full h-full object-cover"
                     onError={(e) => {

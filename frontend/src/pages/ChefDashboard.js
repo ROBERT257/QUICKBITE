@@ -45,12 +45,14 @@ const ChefDashboard = () => {
     };
   }, [navigate]);
 
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('access_token');
       
       // Fetch menu items
-      const menuResponse = await fetch('http://localhost:8000/api/menu/items/', {
+      const menuResponse = await fetch(`${API_BASE_URL}/api/menu/items/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -60,7 +62,7 @@ const ChefDashboard = () => {
       }
 
       // Fetch orders
-      const ordersResponse = await fetch('http://localhost:8000/api/orders/', {
+      const ordersResponse = await fetch(`${API_BASE_URL}/api/orders/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -81,7 +83,7 @@ const ChefDashboard = () => {
     
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:8000/api/menu/${itemId}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/menu/${itemId}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

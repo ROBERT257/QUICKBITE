@@ -1,4 +1,6 @@
 // Real-time service for live order updates
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
 class RealtimeService {
   constructor() {
     this.subscribers = new Map();
@@ -48,7 +50,7 @@ class RealtimeService {
       // Check if user is admin and use appropriate endpoint
       const userType = localStorage.getItem('user_type');
       const isAdmin = userType === 'admin';
-      const endpoint = isAdmin ? 'http://localhost:8000/api/orders/admin_orders/' : 'http://localhost:8000/api/orders/';
+      const endpoint = isAdmin ? `${API_BASE_URL}/api/orders/admin_orders/` : `${API_BASE_URL}/api/orders/`;
 
       console.log('Realtime Debug:', {
         userType,
