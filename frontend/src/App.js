@@ -13,21 +13,24 @@ import Profile from './pages/Profile';
 import Orders from './pages/Orders';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/SecureAdminDashboard';
+import ChefDashboard from './pages/ChefDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const queryClient = new QueryClient();
 
 const RedirectByRole = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isChef } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
     if (isAdmin) {
       navigate('/admin', { replace: true });
+    } else if (isChef) {
+      navigate('/chef', { replace: true });
     } else {
       navigate('/profile', { replace: true });
     }
-  }, [isAdmin, navigate]);
+  }, [isAdmin, isChef, navigate]);
   
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -73,6 +76,12 @@ function App() {
                 <Route path="/admin" element={
                   <ProtectedRoute adminOnly={true}>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/chef" element={
+                  <ProtectedRoute chefOnly={true}>
+                    <ChefDashboard />
                   </ProtectedRoute>
                 } />
               </Routes>

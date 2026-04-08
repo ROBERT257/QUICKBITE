@@ -1,17 +1,23 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FiFilter, FiX, FiClock, FiStar, FiShoppingCart, FiPlus, FiMinus } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiFilter, FiX, FiClock, FiStar, FiShoppingCart, FiPlus, FiMinus, FiCheck, FiTrendingUp, FiAlertCircle } from 'react-icons/fi';
 import { menuAPI, aiAPI } from '../services/api';
 import { useQuery } from 'react-query';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import SmartSearchBar from '../components/SmartSearchBar';
+import realtimeService from '../services/realtime';
 
 const EnhancedMenu = () => {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [cart, setCart] = useState({});
   const [searchResults, setSearchResults] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showNewItems, setShowNewItems] = useState({});
 
   // Fetch categories
   const { data: categories, isLoading: categoriesLoading } = useQuery(
@@ -30,6 +36,29 @@ const EnhancedMenu = () => {
       enabled: !searchResults // Only fetch if no search results
     }
   );
+
+  // Real-time updates for chef status changes
+  useEffect(() => {
+    const unsubscribe = realtimeService.subscribeToMenuItems((updatedItems) => {
+      // Show notification for newly ready items
+      updatedItems.forEach(item => {
+        if (item.chef_status === 'ready' && !showNewItems[item.id]) {
+          setShowNewItems(prev => ({ ...prev, [item.id]: true }));
+          toast.success(`${item.name} is now ready to order!`, {
+            icon: ' Chef Ready',
+            duration: 4000
+          });
+          
+          // Hide the "new" indicator after 5 seconds
+          setTimeout(() => {
+            setShowNewItems(prev => ({ ...prev, [item.id]: false }));
+          }, 5000);
+        }
+      });
+    });
+
+    return unsubscribe;
+  }, [showNewItems]);
 
   const addToCart = (item) => {
     setCart(prev => ({
@@ -56,12 +85,36 @@ const EnhancedMenu = () => {
   };
 
   const getCartTotal = () => {
-    const items = searchResults || menuItems;
-    if (!items) return 0;
+    if (!menuItems) return 0;
     return Object.entries(cart).reduce((total, [itemId, count]) => {
-      const item = items.find(item => item.id === parseInt(itemId));
+      const item = menuItems.find(item => item.id === parseInt(itemId));
       return total + (item ? parseFloat(item.price) * count : 0);
     }, 0);
+  };
+
+  const proceedToCheckout = () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to proceed');
+      navigate('/login');
+      return;
+    }
+    
+    if (getCartCount() === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    // Store cart in localStorage for checkout page
+    const cartData = Object.entries(cart).map(([itemId, quantity]) => {
+      const item = menuItems.find(item => item.id === parseInt(itemId));
+      return {
+        ...item,
+        quantity
+      };
+    }).filter(Boolean);
+
+    localStorage.setItem('cart', JSON.stringify(cartData));
+    navigate('/checkout');
   };
 
   const handleAISearch = (searchData) => {
@@ -231,11 +284,35 @@ const EnhancedMenu = () => {
                   
                   {/* Badges */}
                   <div className="absolute top-2 left-2 flex flex-col gap-2">
+                    {item.chef_status === 'ready' && (
+                      <AnimatePresence>
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center space-x-1"
+                        >
+                          <FiCheck className="w-3 h-3" />
+                          <span>Ready to Order</span>
+                        </motion.div>
+                      </AnimatePresence>
+                    )}
                     {item.is_featured && (
                       <div className="bg-neon-yellow text-black px-2 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
                         <FiStar className="w-3 h-3" />
                         <span>Featured</span>
                       </div>
+                    )}
+                    {showNewItems[item.id] && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center space-x-1 animate-pulse"
+                      >
+                        <FiTrendingUp className="w-3 h-3" />
+                        <span>Just Ready!</span>
+                      </motion.div>
                     )}
                     <div className={`px-2 py-1 rounded-full text-xs font-bold ${getSpiceLevelColor(item.spice_level)}`}>
                       {getSpiceLevelText(item.spice_level)} {item.spice_level}
@@ -349,25 +426,54 @@ const EnhancedMenu = () => {
           </motion.div>
         )}
 
-        {/* Cart Summary */}
-        {getCartCount() > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="fixed bottom-8 right-8 glass-card p-6 max-w-sm"
-          >
-            <h3 className="text-white font-semibold mb-2">Cart Summary</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between text-white/80">
-                <span>Items ({getCartCount()})</span>
-                <span>KSh {getCartTotal()}</span>
+        {/* Sticky Checkout Button */}
+        <AnimatePresence>
+          {getCartCount() > 0 && (
+            <motion.div
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 100 }}
+              className="fixed top-24 right-6 z-40 glass-card p-4 max-w-xs shadow-2xl border border-green-500/30"
+            >
+              {/* Cart Preview */}
+              <div className="mb-3">
+                <h3 className="text-white font-semibold mb-2 text-sm">Your Cart</h3>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {Object.entries(cart).slice(0, 3).map(([itemId, quantity]) => {
+                    const item = displayItems?.find(item => item.id === parseInt(itemId));
+                    return item ? (
+                      <div key={itemId} className="flex justify-between text-white/70 text-xs">
+                        <span>{item.name} x{quantity}</span>
+                        <span>KSh {parseFloat(item.price) * quantity}</span>
+                      </div>
+                    ) : null;
+                  })}
+                  {Object.keys(cart).length > 3 && (
+                    <div className="text-white/50 text-xs italic">...and {Object.keys(cart).length - 3} more</div>
+                  )}
+                </div>
               </div>
-              <button className="w-full bg-neon-green text-black px-4 py-2 rounded-full font-semibold hover:bg-green-500 transition-colors">
-                Proceed to Checkout
+              
+              {/* Checkout Button */}
+              <button
+                onClick={proceedToCheckout}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-black px-4 py-3 rounded-full font-bold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-green-500/50 flex items-center justify-center space-x-2"
+              >
+                <FiShoppingCart className="w-4 h-4" />
+                <span>Checkout</span>
+                <span className="bg-white/20 px-2 py-1 rounded-full text-xs">
+                  {getCartCount()}
+                </span>
               </button>
-            </div>
-          </motion.div>
-        )}
+              
+              {/* Total */}
+              <div className="mt-2 text-center">
+                <span className="text-white/70 text-sm">Total: </span>
+                <span className="text-green-400 font-bold">KSh {getCartTotal()}</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

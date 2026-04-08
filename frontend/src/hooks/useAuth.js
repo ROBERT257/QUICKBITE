@@ -32,6 +32,26 @@ export const AuthProvider = ({ children }) => {
         const user = JSON.parse(userFromStorage);
         setUser(user);
         console.log('User restored from localStorage:', user);
+        
+        // Check and set user_type based on role
+        const userRole = user?.role || 'customer';
+        const username = (user?.username || '').toLowerCase();
+        
+        // Check role from backend OR use username as fallback
+        const isAdmin = userRole === 'admin' || username === 'elvis' || username === 'admin' || username.includes('admin');
+        const isChef = userRole === 'chef' || username.includes('chef');
+        
+        if (isAdmin) {
+          localStorage.setItem('user_type', 'admin');
+          console.log('Admin role detected and set');
+        } else if (isChef) {
+          localStorage.setItem('user_type', 'chef');
+          console.log('Chef role detected and set');
+        } else {
+          localStorage.setItem('user_type', 'customer');
+          console.log('Customer role detected and set');
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error('Failed to parse user from localStorage:', error);
@@ -59,11 +79,18 @@ export const AuthProvider = ({ children }) => {
       
       // Check user role and set user_type accordingly
       const userRole = user?.role || 'customer';
-      const isAdmin = userRole === 'admin' || user?.username?.toUpperCase() === 'ELVIS';
+      const username = (user?.username || '').toLowerCase();
+      
+      // Check role from backend OR use username as fallback
+      const isAdmin = userRole === 'admin' || username === 'elvis' || username === 'admin' || username.includes('admin');
+      const isChef = userRole === 'chef' || username.includes('chef');
       
       if (isAdmin) {
         localStorage.setItem('user_type', 'admin');
         console.log('Admin user detected on fetch:', user.username);
+      } else if (isChef) {
+        localStorage.setItem('user_type', 'chef');
+        console.log('Chef user detected on fetch:', user.username);
       } else {
         localStorage.setItem('user_type', userRole);
         console.log('Customer user detected on fetch:', user.username);
@@ -92,10 +119,14 @@ export const AuthProvider = ({ children }) => {
       // Check user role and set user_type accordingly
       const userRole = user?.role || 'customer';
       const isAdmin = userRole === 'admin' || user?.username?.toUpperCase() === 'ELVIS';
+      const isChef = userRole === 'chef';
       
       if (isAdmin) {
         localStorage.setItem('user_type', 'admin');
         console.log('Admin user detected:', user.username);
+      } else if (isChef) {
+        localStorage.setItem('user_type', 'chef');
+        console.log('Chef user detected:', user.username);
       } else {
         localStorage.setItem('user_type', userRole);
         console.log('Customer user detected:', user.username);
@@ -182,6 +213,7 @@ export const AuthProvider = ({ children }) => {
     isLoggingIn,
     isAuthenticated: !!user,
     isAdmin: localStorage.getItem('user_type') === 'admin',
+    isChef: localStorage.getItem('user_type') === 'chef',
   };
 
   return (

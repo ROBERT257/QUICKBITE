@@ -20,7 +20,8 @@ const PremiumAuth = ({ isLogin = true }) => {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    phone: ''
+    phone: '',
+    role: 'customer'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -106,7 +107,8 @@ const PremiumAuth = ({ isLogin = true }) => {
             password_confirm: formData.confirmPassword,
             first_name: formData.firstName,
             last_name: formData.lastName,
-            phone: formData.phone
+            phone: formData.phone,
+            role: formData.role
           };
       
       const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -135,29 +137,42 @@ const PremiumAuth = ({ isLogin = true }) => {
           localStorage.setItem('user', JSON.stringify(data.user));
           
           // Check user role and redirect accordingly
-          const userRole = data.user?.role || 'customer';
-          const isAdmin = userRole === 'admin' || data.user?.username?.toUpperCase() === 'ELVIS';
+          // Try different possible role field names from backend
+          const userRole = data.user?.role || data.user?.user_type || data.user?.type || data.role || 'customer';
+          const username = (data.user?.username || '').toLowerCase();
           
-          console.log('Login Debug:', {
-            user: data.user,
-            userRole,
-            isAdmin,
-            usernameUpper: data.user?.username?.toUpperCase()
-          });
+          // Check role from backend OR use username as fallback
+          const isAdmin = userRole === 'admin' || username === 'elvis' || username === 'admin' || username.includes('admin');
+          const isChef = userRole === 'chef' || username.includes('chef');
+          
+          console.log('=== LOGIN DEBUG ===');
+          console.log('Full response:', data);
+          console.log('User object:', data.user);
+          console.log('Detected role:', userRole);
+          console.log('Username:', username);
+          console.log('isAdmin:', isAdmin);
+          console.log('isChef:', isChef);
+          console.log('===================');
           
           if (isAdmin) {
             toast.success('Welcome Admin! 🎉');
             localStorage.setItem('user_type', 'admin');
-            // Force redirect using window.location
             window.location.href = '/admin';
+          } else if (isChef) {
+            toast.success('Welcome Chef! 👨‍🍳');
+            localStorage.setItem('user_type', 'chef');
+            window.location.href = '/chef';
           } else {
             toast.success('Welcome back! 🎉');
             localStorage.setItem('user_type', 'customer');
-            // Force redirect using window.location
             window.location.href = '/profile';
           }
         } else {
-          toast.success('Account created successfully! 🎉');
+          if (formData.role === 'chef') {
+            toast.success('Chef account created! Please login to access your dashboard. 👨‍🍳');
+          } else {
+            toast.success('Account created successfully! 🎉');
+          }
           navigate('/login');
         }
       } else {
@@ -449,6 +464,50 @@ const PremiumAuth = ({ isLogin = true }) => {
               </motion.div>
             )}
 
+            {/* Role Selection - Only for Signup */}
+            {!isLogin && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                transition={{ delay: 0.6 }}
+                className="relative"
+              >
+                <label className="text-white/70 text-sm mb-2 block">Account Type</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, role: 'customer' }))}
+                    className={`px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
+                      formData.role === 'customer'
+                        ? 'border-blue-500 bg-blue-500/20 text-blue-400'
+                        : 'border-white/20 text-white/60 hover:border-white/40'
+                    }`}
+                    disabled={isLoading}
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="text-lg mb-1">👤</span>
+                      <span className="text-sm font-medium">Customer</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, role: 'chef' }))}
+                    className={`px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
+                      formData.role === 'chef'
+                        ? 'border-green-500 bg-green-500/20 text-green-400'
+                        : 'border-white/20 text-white/60 hover:border-white/40'
+                    }`}
+                    disabled={isLoading}
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="text-lg mb-1">👨‍🍳</span>
+                      <span className="text-sm font-medium">Chef</span>
+                    </div>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* Submit Button */}
             <motion.button
               type="submit"
@@ -485,6 +544,7 @@ const PremiumAuth = ({ isLogin = true }) => {
                 </Link>
               </p>
             </div>
+
           </form>
         </motion.div>
       </div>

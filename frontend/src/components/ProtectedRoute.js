@@ -2,8 +2,8 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
-const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { isAuthenticated, isAdmin, loading, user } = useAuth();
+const ProtectedRoute = ({ children, adminOnly = false, chefOnly = false }) => {
+  const { isAuthenticated, isAdmin, isChef, loading, user } = useAuth();
 
   // Debug logging
   console.log('ProtectedRoute Debug:', {
@@ -32,6 +32,11 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
   if (adminOnly && !isAdmin) {
     console.log('Admin route accessed but user is not admin, redirecting to profile');
+    return <Navigate to="/profile" replace />;
+  }
+
+  if (chefOnly && !isChef) {
+    console.log('Chef route accessed but user is not chef, redirecting to profile');
     return <Navigate to="/profile" replace />;
   }
 
