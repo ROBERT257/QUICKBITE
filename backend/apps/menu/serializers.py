@@ -1,10 +1,5 @@
 from rest_framework import serializers
-from .models import Category, MenuItem, Review
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = '__all__'
+from .models import MenuItem, Review
 
 class ReviewSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
@@ -15,7 +10,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ('user',)
 
 class MenuItemSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
     average_rating = serializers.ReadOnlyField()
     reviews = ReviewSerializer(many=True, read_only=True)
     
@@ -24,10 +18,9 @@ class MenuItemSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class MenuItemListSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name', read_only=True)
     average_rating = serializers.ReadOnlyField()
     
     class Meta:
         model = MenuItem
-        fields = ('id', 'name', 'description', 'price', 'category_name', 'image', 
+        fields = ('id', 'name', 'description', 'price', 'image', 
                  'is_available', 'is_featured', 'preparation_time', 'average_rating', 'spice_level')

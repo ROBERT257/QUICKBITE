@@ -6,11 +6,21 @@ import {
   MailIcon,
   PhoneIcon,
   LocationMarkerIcon,
-  CalendarIcon
+  CalendarIcon,
+  ShoppingBagIcon,
+  ClockIcon,
+  CreditCardIcon,
+  StarIcon,
+  ArrowRightIcon,
+  DocumentTextIcon,
+  CogIcon
 } from '@heroicons/react/outline';
 import { useAuth } from '../hooks/useAuth';
-import { authAPI } from '../services/api';
+import { authAPI, ordersAPI } from '../services/api';
+import { Link } from 'react-router-dom';
+import { useQuery } from 'react-query';
 import toast from 'react-hot-toast';
+import UniformLayout from '../components/UniformLayout';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
@@ -26,6 +36,20 @@ const Profile = () => {
   const [avatar, setAvatar] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Fetch user orders
+  const { data: userOrders = [], isLoading: ordersLoading } = useQuery(
+    'userOrders',
+    async () => {
+      try {
+        const response = await ordersAPI.getMyOrders();
+        return response.data || [];
+      } catch (error) {
+        console.error('Failed to fetch user orders:', error);
+        return [];
+      }
+    }
+  );
 
   useEffect(() => {
     if (user) {
@@ -92,16 +116,187 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen py-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <UniformLayout title="User Dashboard" showSidebar={true}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-bold text-gradient mb-2">
+            Welcome back, {user?.first_name || 'User'}! 👋
+          </h1>
+          <p className="text-white/70">Manage your profile, orders, and preferences</p>
+        </motion.div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {[
+            {
+              icon: ShoppingBagIcon,
+              label: 'Order Food',
+              description: 'Browse menu',
+              link: '/menu',
+              color: 'from-orange-500 to-red-500'
+            },
+            {
+              icon: ClockIcon,
+              label: 'My Orders',
+              description: 'View history',
+              link: '/orders',
+              color: 'from-blue-500 to-cyan-500'
+            },
+            {
+              icon: CreditCardIcon,
+              label: 'Payment',
+              description: 'Manage cards',
+              link: '#payment',
+              color: 'from-green-500 to-emerald-500'
+            },
+            {
+              icon: CogIcon,
+              label: 'Settings',
+              description: 'Preferences',
+              link: '#settings',
+              color: 'from-purple-500 to-pink-500'
+            }
+          ].map((action, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.05 }}
+              className="glass-card p-6 cursor-pointer hover:scale-105 transition-all duration-300"
+            >
+              <Link to={action.link} className="block">
+                <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${action.color} flex items-center justify-center mb-4`}>
+                  <action.icon className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-white font-semibold mb-1">{action.label}</h3>
+                <p className="text-white/60 text-sm">{action.description}</p>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass-card p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white/60 text-sm mb-1">Total Orders</p>
+                <p className="text-3xl font-bold text-white">{userOrders.length}</p>
+              </div>
+              <ShoppingBagIcon className="w-8 h-8 text-orange-400" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="glass-card p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white/60 text-sm mb-1">Member Since</p>
+                <p className="text-xl font-bold text-white">
+                  {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Recent'}
+                </p>
+              </div>
+              <CalendarIcon className="w-8 h-8 text-blue-400" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="glass-card p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white/60 text-sm mb-1">Account Status</p>
+                <p className="text-xl font-bold text-green-400">Active</p>
+              </div>
+              <StarIcon className="w-8 h-8 text-green-400" />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Recent Orders */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="glass-card p-6 mb-8"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white">Recent Orders</h2>
+            <Link to="/orders" className="text-orange-400 hover:text-orange-300 flex items-center">
+              View All <ArrowRightIcon className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+
+          {ordersLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-400"></div>
+            </div>
+          ) : userOrders.length === 0 ? (
+            <div className="text-center py-8">
+              <ShoppingBagIcon className="w-12 h-12 text-white/40 mx-auto mb-4" />
+              <p className="text-white/60">No orders yet</p>
+              <Link to="/menu" className="btn-glow mt-4 inline-block">
+                Order Now
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {userOrders.slice(0, 3).map((order) => (
+                <div key={order.id} className="flex items-center justify-between p-4 glass-morphism rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                      <ShoppingBagIcon className="w-6 h-6 text-orange-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">Order #{order.id}</p>
+                      <p className="text-white/60 text-sm">
+                        {new Date(order.created_at).toLocaleDateString()} • {order.items?.length || 0} items
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-white font-semibold">KSh {order.total || 0}</p>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      order.status === 'delivered' ? 'bg-green-500/20 text-green-400' :
+                      order.status === 'preparing' ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-blue-500/20 text-blue-400'
+                    }`}>
+                      {order.status || 'pending'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Profile Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
           className="glass-card p-8"
         >
-          {/* Header */}
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-gradient">My Profile</h1>
+            <h2 className="text-2xl font-bold text-white">Profile Information</h2>
             <button
               onClick={() => setIsEditing(!isEditing)}
               className="btn-glow px-6 py-2"
@@ -311,7 +506,7 @@ const Profile = () => {
           </div>
         </motion.div>
       </div>
-    </div>
+    </UniformLayout>
   );
 };
 

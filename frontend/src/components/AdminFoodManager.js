@@ -418,18 +418,25 @@ const AdminFoodManager = () => {
 
         {/* Add/Edit Form Modal */}
         {showAddForm && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-8">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="premium-card w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="premium-card w-full max-w-3xl max-h-[95vh] overflow-y-auto relative"
             >
-              <div className="p-6">
+              <button
+                type="button"
+                onClick={() => { setShowAddForm(false); setEditingItem(null); resetForm(); }}
+                className="absolute top-4 right-4 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 z-10"
+                aria-label="Close"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+              <div className="flex-1 flex flex-col overflow-y-auto p-4 md:p-8">
                 <h2 className="text-2xl font-bold text-white mb-6">
                   {editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}
                 </h2>
-                
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4 pb-24">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-white/70 mb-2">Name</label>

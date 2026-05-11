@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiHome, FiUsers, FiShoppingCart, FiSettings, FiTrendingUp, FiPackage, FiDollarSign, FiClock, FiSearch, FiFilter, FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiCheck, FiX, FiMenu, FiLogOut, FiRefreshCw } from 'react-icons/fi';
+import { FiHome, FiUsers, FiShoppingCart, FiSettings, FiTrendingUp, FiPackage, FiDollarSign, FiClock, FiSearch, FiFilter, FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiCheck, FiCheckCircle, FiX, FiMenu, FiLogOut, FiRefreshCw } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import UniformLayout from '../components/UniformLayout';
 
 const AdminDashboard = () => {
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -18,7 +19,6 @@ const AdminDashboard = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [newFood, setNewFood] = useState({
     name: '',
-    category: 'Burgers',
     price: '',
     description: '',
     image: '',
@@ -88,6 +88,9 @@ const AdminDashboard = () => {
   const fetchFoods = async () => {
     try {
       const token = localStorage.getItem('access_token');
+      console.log('Token exists:', !!token);
+      console.log('Fetching from:', `${API_BASE_URL}/api/menu/items/`);
+      
       const response = await fetch(`${API_BASE_URL}/api/menu/items/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -95,9 +98,29 @@ const AdminDashboard = () => {
         }
       });
       
+      console.log('Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
-        setFoods(data.results || data);
+        console.log('Fetched foods data:', data);
+        const foodsData = data.results || data;
+        console.log('Setting foods:', foodsData);
+        console.log('Number of foods:', foodsData.length);
+        setFoods(foodsData);
+      } else {
+        console.error('Failed to fetch foods:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        
+        // Try without authentication as fallback
+        console.log('Trying without authentication...');
+        const fallbackResponse = await fetch(`${API_BASE_URL}/api/menu/items/`);
+        if (fallbackResponse.ok) {
+          const data = await fallbackResponse.json();
+          const foodsData = data.results || data;
+          console.log('Fallback - Setting foods:', foodsData);
+          setFoods(foodsData);
+        }
       }
     } catch (error) {
       console.error('Error fetching foods:', error);
@@ -126,22 +149,42 @@ const AdminDashboard = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API_BASE_URL}/api/orders/`, {
+      console.log('Fetching orders from:', `${API_BASE_URL}/api/orders/dashboard_orders/`);
+      console.log('Token exists:', !!token);
+      
+      const response = await fetch(`${API_BASE_URL}/api/orders/dashboard_orders/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
       
+      console.log('Orders response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Orders data received:', data);
         setOrders(data.results || data);
+      } else {
+        console.error('Failed to fetch orders:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        
+        // Try without authentication as fallback
+        console.log('Trying orders without authentication...');
+        const fallbackResponse = await fetch(`${API_BASE_URL}/api/orders/dashboard_orders/`);
+        if (fallbackResponse.ok) {
+          const data = await fallbackResponse.json();
+          console.log('Fallback orders data:', data);
+          setOrders(data.results || data);
+        }
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
     }
   };
 
+  
   // Handler Functions for Food Management
   const handleToggleFoodStatus = async (food) => {
     try {
@@ -176,7 +219,6 @@ const AdminDashboard = () => {
     setSelectedFood(food);
     setNewFood({
       name: food.name,
-      category: food.category,
       price: food.price,
       description: food.description || '',
       image: food.image || '',
@@ -214,7 +256,6 @@ const AdminDashboard = () => {
     setSelectedFood(null);
     setNewFood({
       name: '',
-      category: 'Burgers',
       price: '',
       description: '',
       image: '',
@@ -244,12 +285,28 @@ const AdminDashboard = () => {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('access_token');
+      
       const formData = new FormData();
       formData.append('name', newFood.name);
-      formData.append('category', newFood.category);
       formData.append('price', newFood.price);
-      formData.append('description', newFood.description);
+      formData.append('description', newFood.description || 'Delicious food item');
       formData.append('is_available', newFood.status === 'Available');
+      formData.append('preparation_time', '15'); // Default 15 minutes
+      formData.append('spice_level', 'mild'); // Default spice level
+
+      // Add image if provided
+      if (newFood.image && typeof newFood.image !== 'string') {
+        formData.append('image', newFood.image);
+      }
+
+      console.log('Submitting food data:', {
+        name: newFood.name,
+        price: newFood.price,
+        description: newFood.description,
+        is_available: newFood.status === 'Available',
+        preparation_time: '15',
+        spice_level: 'mild'
+      });
 
       let response;
       if (isEditMode && selectedFood) {
@@ -272,15 +329,21 @@ const AdminDashboard = () => {
         });
       }
 
+      console.log('Response status:', response.status);
       if (response.ok) {
+        const result = await response.json();
+        console.log('Food created/updated:', result);
         toast.success(`${newFood.name} ${isEditMode ? 'updated' : 'added'} successfully!`);
         setShowFoodModal(false);
         fetchFoods(); // Refresh data
         fetchStats(); // Refresh stats
       } else {
-        toast.error(`Failed to ${isEditMode ? 'update' : 'add'} food item`);
+        const errorText = await response.text();
+        console.error('API Error:', errorText);
+        toast.error(`Failed to ${isEditMode ? 'update' : 'add'} food item: ${errorText}`);
       }
     } catch (error) {
+      console.error('Error:', error);
       toast.error(`Error ${isEditMode ? 'updating' : 'adding'} food item`);
     } finally {
       setSubmitting(false);
@@ -458,6 +521,7 @@ const AdminDashboard = () => {
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
       const token = localStorage.getItem('access_token');
+      console.log('Updating order status:', { orderId, newStatus, tokenExists: !!token });
       
       // Map frontend status to backend status
       const statusMapping = {
@@ -467,9 +531,10 @@ const AdminDashboard = () => {
       };
       
       const backendStatus = statusMapping[newStatus] || newStatus.toLowerCase();
+      console.log('Backend status mapping:', { newStatus, backendStatus });
       
-      const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/status/`, {
-        method: 'PUT',
+      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/update_status/`, {
+        method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -477,14 +542,21 @@ const AdminDashboard = () => {
         body: JSON.stringify({ status: backendStatus })
       });
 
+      console.log('Update status response:', response.status, response.statusText);
+      
       if (response.ok) {
+        const responseData = await response.json();
+        console.log('Update response data:', responseData);
         toast.success(`Order ${orderId} status updated to ${newStatus}!`);
         fetchOrders(); // Refresh data
         fetchStats(); // Refresh stats
       } else {
-        toast.error('Failed to update order status');
+        const errorText = await response.text();
+        console.error('Update status error:', response.status, errorText);
+        toast.error(`Failed to update order status: ${response.status}`);
       }
     } catch (error) {
+      console.error('Update status exception:', error);
       toast.error('Error updating order status');
     }
   };
@@ -540,7 +612,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
+    <UniformLayout title="Admin Dashboard" showSidebar={true}>
       {/* Sidebar */}
       <motion.div
         initial={{ x: -300 }}
@@ -549,12 +621,6 @@ const AdminDashboard = () => {
         className={`fixed left-0 top-0 h-full w-64 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-2xl z-30 border-r ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}
       >
         <div className="p-6">
-          <div className="flex items-center mb-8">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-              Q
-            </div>
-            <span className={`ml-3 text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>QuickBite Admin</span>
-          </div>
 
           <nav className="space-y-2">
             {sidebarItems.map((item) => (
@@ -587,15 +653,11 @@ const AdminDashboard = () => {
               {darkMode ? '🌞' : '🌙'}
             </motion.button>
           </div>
-        </div>
-
-        <div className="absolute bottom-20 left-6 right-6">
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleLogout}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             className={`w-full p-3 rounded-lg transition-all duration-200 ${
-              darkMode ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-red-500 hover:bg-red-600 text-white'
+              darkMode ? 'bg-gray-700 hover:bg-gray-600 text-red-400' : 'bg-gray-100 hover:bg-gray-200 text-red-600'
             }`}
           >
             <FiLogOut className="w-5 h-5 mr-2" />
@@ -606,36 +668,7 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <div className={`transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-        {/* Header */}
-        <header className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className={`p-2 rounded-lg transition-all duration-200 ${
-                  darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
-                }`}
-              >
-                <FiMenu className="w-5 h-5" />
-              </motion.button>
-              <h1 className={`ml-4 text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                {sidebarItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
-              </h1>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                <FiSearch className={`w-4 h-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`} />
-              </div>
-              <div className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                <FiFilter className={`w-4 h-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`} />
-              </div>
-            </div>
-          </div>
-        </header>
-
+        
         {/* Content Area */}
         <main className="p-6">
           {activeSection === 'overview' && (
@@ -651,7 +684,7 @@ const AdminDashboard = () => {
                 {[
                   { label: 'Total Users', value: stats.totalUsers, icon: FiUsers, color: 'blue' },
                   { label: 'Total Orders', value: stats.totalOrders, icon: FiShoppingCart, color: 'green' },
-                  { label: 'Total Revenue', value: `$${stats.totalRevenue.toLocaleString()}`, icon: FiDollarSign, color: 'yellow' },
+                  { label: 'Total Revenue', value: `KSh ${stats.totalRevenue.toLocaleString()}`, icon: FiDollarSign, color: 'yellow' },
                   { label: 'Active Foods', value: stats.activeFoods, icon: FiPackage, color: 'purple' },
                 ].map((stat, index) => (
                   <motion.div
@@ -687,7 +720,7 @@ const AdminDashboard = () => {
                       <div key={order.id} className={`flex items-center justify-between p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                         <div>
                           <p className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>{order.customer}</p>
-                          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{order.items} items • ${order.total}</p>
+                          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{Array.isArray(order.items) ? order.items.length : 0} items • ${order.total}</p>
                         </div>
                         <div className="text-right">
                           {getStatusBadge(order.status)}
@@ -711,7 +744,7 @@ const AdminDashboard = () => {
                         <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Today's Revenue</span>
                         <FiDollarSign className="w-4 h-4 text-green-500" />
                       </div>
-                      <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>${stats.todayRevenue.toLocaleString()}</p>
+                      <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>KSh {stats.todayRevenue.toLocaleString()}</p>
                     </div>
                     <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                       <div className="flex items-center justify-between mb-2">
@@ -755,14 +788,19 @@ const AdminDashboard = () => {
                     className={`w-full pl-10 pr-4 py-3 rounded-lg border ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-800'} focus:outline-none focus:ring-2 focus:ring-purple-500`}
                   />
                 </div>
-                <select className={`px-4 py-3 rounded-lg border ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-800'} focus:outline-none focus:ring-2 focus:ring-purple-500`}>
-                  <option>All Categories</option>
-                  <option>Burgers</option>
-                  <option>Pizza</option>
-                  <option>Appetizers</option>
-                  <option>Salads</option>
-                  <option>Desserts</option>
-                </select>
+              </div>
+
+              {/* Debug Info */}
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-4 mb-6 border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Debug: Foods count = {foods.length}, Loading = {loading.toString()}
+                </p>
+                <details className="mt-2">
+                  <summary className={`text-sm cursor-pointer ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>View foods data</summary>
+                  <pre className={`text-xs mt-2 p-2 rounded ${darkMode ? 'bg-gray-900 text-gray-300' : 'bg-gray-100 text-gray-700'} overflow-auto max-h-40`}>
+                    {JSON.stringify(foods, null, 2)}
+                  </pre>
+                </details>
               </div>
 
               {/* Foods Table */}
@@ -772,7 +810,6 @@ const AdminDashboard = () => {
                     <thead className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                       <tr>
                         <th className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Food</th>
-                        <th className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Category</th>
                         <th className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Price</th>
                         <th className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Status</th>
                         <th className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Orders</th>
@@ -790,14 +827,23 @@ const AdminDashboard = () => {
                         >
                           <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-800'}`}>
                             <div className="flex items-center">
-                              <span className="text-2xl mr-3">{food.image}</span>
+                              {food.image ? (
+                                <img 
+                                  src={food.image} 
+                                  alt={food.name}
+                                  className="w-10 h-10 rounded-lg object-cover mr-3"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 bg-gray-300 rounded-lg flex items-center justify-center mr-3">
+                                  <FiPackage className="w-5 h-5 text-gray-600" />
+                                </div>
+                              )}
                               <span className="font-medium">{food.name}</span>
                             </div>
                           </td>
-                          <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{food.category}</td>
-                          <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-800'}`}>${food.price}</td>
-                          <td className={`px-6 py-4 whitespace-nowrap`}>{getStatusBadge(food.status)}</td>
-                          <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{food.orders}</td>
+                          <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-800'}`}>KSh {food.price}</td>
+                          <td className={`px-6 py-4 whitespace-nowrap`}>{getStatusBadge(food.is_available ? 'Available' : 'Out of Stock')}</td>
+                          <td className={`px-6 py-4 whitespace-nowrap ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>-</td>
                           <td className={`px-6 py-4 whitespace-nowrap`}>
                             <div className="flex items-center space-x-2">
                               <motion.button
@@ -808,7 +854,7 @@ const AdminDashboard = () => {
                                   darkMode ? 'hover:bg-gray-600 text-yellow-400' : 'hover:bg-gray-100 text-yellow-600'
                                 }`}
                               >
-                                {food.status === 'Available' ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                                {food.is_available ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                               </motion.button>
                               <motion.button
                                 whileHover={{ scale: 1.1 }}
@@ -875,19 +921,33 @@ const AdminDashboard = () => {
                     {orders.slice(0, 5).map((order) => (
                       <div key={order.id} className={`flex items-center justify-between p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                         <div>
-                          <p className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>{order.customer}</p>
-                          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{order.items} items • ${order.total}</p>
+                          <p className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>{order.user_name || order.order_number}</p>
+                          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{Array.isArray(order.items) ? order.items.length : 0} items • ${order.total_amount}</p>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <select
-                            value={order.status}
-                            onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                            className={`px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'} focus:outline-none focus:ring-2 focus:ring-purple-500`}
-                          >
-                            <option>Pending</option>
-                            <option>Preparing</option>
-                            <option>Delivered</option>
-                          </select>
+                          <div className="flex items-center space-x-1">
+                            {['Pending', 'Preparing', 'Delivered'].map((status) => (
+                              <motion.button
+                                key={status}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleUpdateOrderStatus(order.id, status)}
+                                className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                                  order.status === status
+                                    ? status === 'Pending'
+                                      ? 'bg-yellow-500 text-white'
+                                      : status === 'Preparing'
+                                      ? 'bg-blue-500 text-white'
+                                      : 'bg-green-500 text-white'
+                                    : darkMode
+                                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                                }`}
+                              >
+                                {status}
+                              </motion.button>
+                            ))}
+                          </div>
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
@@ -896,7 +956,7 @@ const AdminDashboard = () => {
                               darkMode ? 'hover:bg-gray-600 text-green-400' : 'hover:bg-gray-100 text-green-600'
                             }`}
                           >
-                            <FiCheck className="w-4 h-4" />
+                            <FiCheckCircle className="w-5 h-5" />
                           </motion.button>
                         </div>
                       </div>
@@ -1038,21 +1098,7 @@ const AdminDashboard = () => {
                   placeholder="Food name"
                 />
               </div>
-              <div>
-                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Category</label>
-                <select
-                  value={newFood.category}
-                  onChange={(e) => setNewFood({...newFood, category: e.target.value})}
-                  className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-                >
-                  <option>Burgers</option>
-                  <option>Pizza</option>
-                  <option>Appetizers</option>
-                  <option>Salads</option>
-                  <option>Desserts</option>
-                </select>
-              </div>
-              <div>
+                            <div>
                 <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Price</label>
                 <input
                   type="number"
@@ -1073,6 +1119,34 @@ const AdminDashboard = () => {
                   <option>Available</option>
                   <option>Out of Stock</option>
                 </select>
+              </div>
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={e => {
+                    if (e.target.files && e.target.files[0]) {
+                      setNewFood({ ...newFood, image: e.target.files[0] });
+                    }
+                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-800"
+                />
+                {newFood.image && typeof newFood.image !== 'string' && (
+                  <img
+                    src={URL.createObjectURL(newFood.image)}
+                    alt="Preview"
+                    className="mt-2 w-24 h-24 object-cover rounded-lg border"
+                  />
+                )}
+                {typeof newFood.image === 'string' && newFood.image && (
+                  <img
+                    src={newFood.image}
+                    alt="Preview"
+                    className="mt-2 w-24 h-24 object-cover rounded-lg border"
+                  />
+                )}
               </div>
             </div>
             <div className="flex justify-end space-x-3 mt-6">
@@ -1181,7 +1255,7 @@ const AdminDashboard = () => {
           </motion.div>
         </motion.div>
       )}
-    </div>
+    </UniformLayout>
   );
 };
 

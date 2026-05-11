@@ -2,24 +2,14 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Category, MenuItem, Review
-from .serializers import CategorySerializer, MenuItemSerializer, MenuItemListSerializer, ReviewSerializer
-
-class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [permissions.IsAdminUser()]
-        return [permissions.AllowAny()]
+from .models import MenuItem, Review
+from .serializers import MenuItemSerializer, MenuItemListSerializer, ReviewSerializer
 
 class MenuItemViewSet(viewsets.ModelViewSet):
     queryset = MenuItem.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['category', 'is_featured', 'spice_level', 'is_available']
+    filterset_fields = ['is_featured', 'spice_level', 'is_available']
     search_fields = ['name', 'description']
     ordering_fields = ['price', 'created_at', 'name']
     ordering = ['name']

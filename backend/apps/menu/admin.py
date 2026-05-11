@@ -2,46 +2,33 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.http import HttpResponseRedirect
 from django.contrib import messages
-from .models import Category, MenuItem, Review
-
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'image_preview', 'item_count', 'created_at']
-    search_fields = ['name']
-    readonly_fields = ['image_preview', 'item_count']
-    prepopulated_fields = {'name': ('name',)}
-    
-    def image_preview(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" width="50" height="50" style="object-fit: cover; border-radius: 8px;" />', obj.image.url)
-        return "No Image"
-    image_preview.short_description = 'Preview'
-    
-    def item_count(self, obj):
-        return obj.menuitem_set.count()
-    item_count.short_description = 'Menu Items'
+from .models import MenuItem, Review
 
 @admin.register(MenuItem)
 class MenuItemAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'price', 'spice_level', 'is_available', 'is_featured', 'image_preview', 'created_at']
-    list_filter = ['category', 'is_available', 'is_featured', 'spice_level', 'created_at']
-    search_fields = ['name', 'description', 'category__name']
+    list_display = ['name', 'price', 'spice_level', 'is_available', 'is_featured', 'image_preview', 'created_at']
+    list_filter = ['is_available', 'is_featured', 'spice_level', 'created_at']
+    search_fields = ['name', 'description']
     list_editable = ['is_available', 'is_featured']
     readonly_fields = ['image_preview']
     prepopulated_fields = {'name': ('name',)}
     actions = ['make_available', 'make_unavailable', 'make_featured', 'make_unfeatured', 'bulk_price_update']
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'description', 'category')
+            'fields': ('name', 'description'),
+            'classes': ('wide',),  # Make the container wider
         }),
         ('Pricing & Details', {
-            'fields': ('price', 'spice_level', 'preparation_time')
+            'fields': ('price', 'spice_level', 'preparation_time'),
+            'classes': ('wide',),
         }),
         ('Availability', {
-            'fields': ('is_available', 'is_featured')
+            'fields': ('is_available', 'is_featured'),
+            'classes': ('wide',),
         }),
         ('Media', {
-            'fields': ('image', 'image_preview')
+            'fields': ('image', 'image_preview'),
+            'classes': ('wide',),
         }),
     )
     
@@ -79,7 +66,7 @@ class MenuItemAdmin(admin.ModelAdmin):
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ['menu_item', 'user', 'rating_stars', 'created_at']
-    list_filter = ['rating', 'created_at', 'menu_item__category']
+    list_filter = ['rating', 'created_at']
     search_fields = ['menu_item__name', 'user__username', 'comment']
     readonly_fields = ['created_at', 'rating_stars']
     actions = ['approve_reviews', 'delete_negative_reviews']

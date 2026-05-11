@@ -18,6 +18,7 @@ import { useQuery } from 'react-query';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import realtimeService from '../services/realtime';
+import UniformLayout from '../components/UniformLayout';
 
 const Order = () => {
   const { user, isAuthenticated } = useAuth();
@@ -216,7 +217,7 @@ const Order = () => {
   };
 
   return (
-    <div className="min-h-screen py-20">
+    <UniformLayout title="Order" showSidebar={true}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -414,7 +415,7 @@ const Order = () => {
           </div>
         </div>
       </div>
-    </div>
+    </UniformLayout>
   );
 };
 

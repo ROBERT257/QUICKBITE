@@ -31,7 +31,6 @@ const Login = () => {
       const result = await login(formData);
       if (result.success) {
         toast.success('Login successful!');
-        
         // Check user type and redirect accordingly
         const userType = localStorage.getItem('user_type');
         console.log('Login Debug:', {
@@ -39,10 +38,9 @@ const Login = () => {
           shouldGoToAdmin: userType === 'admin',
           result
         });
-        
         if (userType === 'admin') {
-          console.log('Redirecting to admin dashboard');
-          navigate('/admin-secure');
+          console.log('Redirecting to Django admin dashboard');
+          window.location.href = '/admin';
         } else {
           console.log('Redirecting to user page');
           navigate('/');

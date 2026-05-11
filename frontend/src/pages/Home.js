@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/outline';
 import { menuAPI } from '../services/api';
 import { useQuery } from 'react-query';
+import UniformLayout from '../components/UniformLayout';
 
 const Home = () => {
   const { data: featuredItems, isLoading } = useQuery(
@@ -38,7 +39,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <UniformLayout title="Home" showSidebar={true}>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -326,7 +327,7 @@ const Home = () => {
           </motion.div>
         </div>
       </section>
-    </div>
+    </UniformLayout>
   );
 };
 

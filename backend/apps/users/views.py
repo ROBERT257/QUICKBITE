@@ -35,10 +35,13 @@ def login(request):
     if serializer.is_valid():
         user = serializer.validated_data['user']
         refresh = RefreshToken.for_user(user)
+        # Set user_type for frontend redirect logic
+        user_type = 'admin' if (getattr(user, 'role', None) == 'admin' or getattr(user, 'is_superuser', False)) else getattr(user, 'role', 'customer')
         return Response({
             'user': UserSerializer(user).data,
             'refresh': str(refresh),
             'access': str(refresh.access_token),
+            'user_type': user_type,
         }, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions, status, filters
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Order, OrderTracking
@@ -44,28 +44,84 @@ class OrderViewSet(viewsets.ModelViewSet):
         orders = Order.objects.all().order_by('-created_at')
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def dashboard_orders(self, request):
+        """Get all orders for dashboard display (no auth required for development)"""
+        orders = Order.objects.all().order_by('-created_at')
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data)
 
-    @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['patch'], permission_classes=[permissions.AllowAny])
     def update_status(self, request, pk=None):
         order = self.get_object()
-        if request.user.role != 'admin':
-            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        # Remove admin role check for development
+        
+        print(f"Updating order {pk} status from {order.status} to {request.data}")
         
         serializer = OrderStatusUpdateSerializer(order, data=request.data, partial=True)
         if serializer.is_valid():
             old_status = order.status
             order = serializer.save()
             
+            print(f"Successfully updated order {pk} status to {order.status}")
+            
             # Create tracking entry
-            OrderTracking.objects.create(
-                order=order,
-                status=order.status,
-                notes=f"Status changed from {old_status} to {order.status}",
-                updated_by=request.user
-            )
+            if request.user and request.user.is_authenticated:
+                OrderTracking.objects.create(
+                    order=order,
+                    status=order.status,
+                    notes=f"Status changed from {old_status} to {order.status}",
+                    updated_by=request.user
+                )
             
             return Response(OrderSerializer(order).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            print(f"Serializer errors: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Alternative function-based view for status update
+@api_view(['PATCH'])
+@permission_classes([permissions.AllowAny])
+def update_order_status(request, pk):
+    print(f"Function view called: {request.method} {pk}")
+    
+    try:
+        order = Order.objects.get(pk=pk)
+        print(f"Function view: Updating order {pk} status from {order.status} to {request.data}")
+        
+        serializer = OrderStatusUpdateSerializer(order, data=request.data, partial=True)
+        if serializer.is_valid():
+            old_status = order.status
+            order = serializer.save()
+            
+            print(f"Function view: Successfully updated order {pk} status to {order.status}")
+            
+            # Create tracking entry
+            if request.user and request.user.is_authenticated:
+                OrderTracking.objects.create(
+                    order=order,
+                    status=order.status,
+                    notes=f"Status changed from {old_status} to {order.status}",
+                    updated_by=request.user
+                )
+            
+            return Response(OrderSerializer(order).data)
+        else:
+            print(f"Function view: Serializer errors: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Order.DoesNotExist:
+        print(f"Function view: Order {pk} not found")
+        return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f"Function view: Exception: {e}")
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# Simple test endpoint
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def test_endpoint(request):
+    return Response({'message': 'Orders app is working!'})
     
     @action(detail=True, methods=['get'])
     def tracking(self, request, pk=None):

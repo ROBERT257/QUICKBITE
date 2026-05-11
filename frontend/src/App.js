@@ -6,15 +6,15 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import PremiumNavigation from './components/PremiumNavigation';
 import PremiumAIChat from './components/PremiumAIChat';
 import PremiumAuth from './pages/PremiumAuth';
-import Home from './pages/Home';
 import Menu from './pages/Menu';
 import Order from './pages/Order';
 import Profile from './pages/Profile';
 import Orders from './pages/Orders';
 import UserDashboard from './pages/UserDashboard';
-import AdminDashboard from './pages/SecureAdminDashboard';
+import AdminDashboard from './pages/ModernAdminDashboard';
 import ChefDashboard from './pages/ChefDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import LandingPage from './pages/LandingPage';
 
 const queryClient = new QueryClient();
 
@@ -28,7 +28,7 @@ const RedirectByRole = () => {
     } else if (isChef) {
       navigate('/chef', { replace: true });
     } else {
-      navigate('/profile', { replace: true });
+      navigate('/menu', { replace: true }); // Redirect to menu first for regular users
     }
   }, [isAdmin, isChef, navigate]);
   
@@ -49,13 +49,14 @@ function App() {
             <PremiumAIChat />
             <main className="pt-16">
               <Routes>
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<PremiumAuth isLogin={true} />} />
                 <Route path="/signup" element={<PremiumAuth isLogin={false} />} />
                 <Route path="/menu" element={<Menu />} />
                 <Route path="/order" element={<Order />} />
                 
                 {/* Protected Routes */}
-                <Route path="/" element={
+                <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <RedirectByRole />
                   </ProtectedRoute>

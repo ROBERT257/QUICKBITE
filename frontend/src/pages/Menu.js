@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   FiStar, 
   FiClock, 
@@ -16,6 +16,7 @@ import { menuAPI } from '../services/api';
 import { useQuery } from 'react-query';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
+import UniformLayout from '../components/UniformLayout';
 
 const Menu = () => {
   const { user, isAuthenticated } = useAuth();
@@ -146,16 +147,72 @@ const Menu = () => {
   };
 
   return (
-    <div className="min-h-screen py-20">
+    <UniformLayout title="Menu" showSidebar={true}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Welcome Message */}
+        {user && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card p-4 mb-6 text-center"
+          >
+            <p className="text-white/80">
+              Welcome back, <span className="text-orange-400 font-semibold">{user.first_name || 'User'}</span>! 🍔 
+              Start adding items to your cart below.
+            </p>
+          </motion.div>
+        )}
+        
+        {/* Header with Cart */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="mb-12"
         >
-          <h1 className="text-5xl font-bold text-gradient mb-4">Our Menu</h1>
-          <p className="text-white/70 text-lg">Discover delicious food made with fresh ingredients</p>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-5xl font-bold text-gradient mb-2">Our Menu</h1>
+              <p className="text-white/70 text-lg">Discover delicious food made with fresh ingredients</p>
+            </div>
+            
+            {/* Cart Summary */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center space-x-4"
+            >
+              <div className="text-right">
+                <p className="text-white/60 text-sm">Cart Total</p>
+                <p className="text-2xl font-bold text-white">KSh {getCartTotal().toLocaleString()}</p>
+                <p className="text-white/60 text-sm">{Object.values(cart).reduce((sum, count) => sum + count, 0)} items</p>
+              </div>
+              <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setShowCartSummary(!showCartSummary)}
+                className="relative btn-glow px-6 py-3 flex items-center space-x-2"
+              >
+                <FiShoppingCart className="w-5 h-5" />
+                <span>View Cart</span>
+                {Object.keys(cart).length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-neon-green text-black w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
+                    {Object.values(cart).reduce((sum, count) => sum + count, 0)}
+                  </span>
+                )}
+              </button>
+              
+              {Object.keys(cart).length > 0 && (
+                <Link
+                  to="/order"
+                  className="btn-glow px-6 py-3 flex items-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-500"
+                >
+                  <FiArrowRight className="w-5 h-5" />
+                  <span>Checkout</span>
+                </Link>
+              )}
+            </div>
+            </motion.div>
+          </div>
         </motion.div>
 
         {/* Filters */}
@@ -439,7 +496,7 @@ const Menu = () => {
           </motion.div>
         )}
       </div>
-    </div>
+    </UniformLayout>
   );
 };
 
