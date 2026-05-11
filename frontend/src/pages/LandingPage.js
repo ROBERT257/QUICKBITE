@@ -56,7 +56,7 @@ const LandingPage = () => {
       id: 1,
       name: 'Classic Burger',
       category: 'Fast Food',
-      price: 1299,
+      price: 12.99,
       rating: 4.8,
       reviews: 324,
       image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop',
@@ -66,7 +66,7 @@ const LandingPage = () => {
       id: 2,
       name: 'Margherita Pizza',
       category: 'Italian',
-      price: 1599,
+      price: 15.99,
       rating: 4.9,
       reviews: 512,
       image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop',
@@ -76,7 +76,7 @@ const LandingPage = () => {
       id: 3,
       name: 'Caesar Salad',
       category: 'Healthy',
-      price: 999,
+      price: 9.99,
       rating: 4.6,
       reviews: 189,
       image: 'https://images.unsplash.com/photo-1550302942-5e148c4b9f4f?w=400&h=300&fit=crop',
@@ -86,7 +86,7 @@ const LandingPage = () => {
       id: 4,
       name: 'Sushi Platter',
       category: 'Japanese',
-      price: 2499,
+      price: 24.99,
       rating: 4.9,
       reviews: 267,
       image: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4352?w=400&h=300&fit=crop',
@@ -327,7 +327,7 @@ const LandingPage = () => {
                         <p className="text-sm text-gray-500">{food.category}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-bold text-orange-600">KSh {food.price}</p>
+                        <p className="text-2xl font-bold text-orange-600">${food.price}</p>
                       </div>
                     </div>
 
@@ -561,7 +561,7 @@ const LandingPage = () => {
                 <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
                   <FiTwitter className="w-5 h-5" />
                 </a>
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
+                <a href="https://www.instagram.com/direct/inbox/" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
                   <FiInstagram className="w-5 h-5" />
                 </a>
                 <a href="#" className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
