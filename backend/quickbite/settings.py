@@ -146,9 +146,17 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:64366",
     "http://localhost:64366",
+    "https://roelog.pythonanywhere.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Static files
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # Media files
 MEDIA_URL = '/media/'
