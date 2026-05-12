@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import LandingPage from "./pages/LandingPage";
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -14,7 +15,7 @@ import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/ModernAdminDashboard';
 import ChefDashboard from './pages/ChefDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
-import LandingPage from './pages/LandingPage';
+
 
 const queryClient = new QueryClient();
 
