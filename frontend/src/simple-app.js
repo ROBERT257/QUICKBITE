@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 
 const App = () => {
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://roelog.pythonanywhere.com';
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600">

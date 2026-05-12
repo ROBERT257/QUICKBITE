@@ -4,7 +4,7 @@ import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiFilter, FiUpload, FiImage, FiDol
 import toast from 'react-hot-toast';
 
 const AdminFoodManager = () => {
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://roelog.pythonanywhere.com';
   
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);

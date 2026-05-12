@@ -153,7 +153,7 @@ const Order = () => {
 
       // Try to create order via API
       try {
-        const response = await fetch('http://localhost:8000/api/orders/', {
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://roelog.pythonanywhere.com'}/api/orders/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import UniformLayout from '../components/UniformLayout';
 
 const AdminDashboard = () => {
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://roelog.pythonanywhere.com';
   
   const [activeSection, setActiveSection] = useState('overview');
   const [darkMode, setDarkMode] = useState(true);
