@@ -46,14 +46,14 @@
         </div>
         <div class="links">
             <h3>Access Points:</h3>
-            <p><a href="http://localhost:8000" style="color: white;">Backend API</a></p>
-            <p><a href="http://localhost:8000/admin" style="color: white;">Admin Panel</a></p>
+            <p><a href="https://roelog.pythonanywhere.com" style="color: white;">Backend API</a></p>
+            <p><a href="https://roelog.pythonanywhere.com/admin" style="color: white;">Admin Panel</a></p>
         </div>
     </div>
 
     <script>
         // Test backend connection
-        fetch('http://localhost:8000/')
+        fetch('https://roelog.pythonanywhere.com/')
             .then(response => response.json())
             .then(data => {
                 document.getElementById('backend-status').innerHTML = 

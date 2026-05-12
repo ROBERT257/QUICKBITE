@@ -56,7 +56,7 @@ const FoodRecommendationCard = ({ item }) => {
           {/* Image */}
           <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden">
             <img
-              src={item.image && (item.image.startsWith('http') ? item.image : `${process.env.REACT_APP_API_URL || 'https://roelog.pythonanywhere.com'}/media/${item.image}`) || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}
+              src={item.image && (item.image.startsWith('http') ? item.image : `https://roelog.pythonanywhere.com/media/${item.image}`) || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}
               alt={item.name}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
               onError={(e) => {
